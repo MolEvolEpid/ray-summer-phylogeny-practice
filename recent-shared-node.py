@@ -37,13 +37,33 @@ def apply_time_values(tree):
 		node_dist = distance_from_root(node)
 		node.time = tree_max - node_dist
 
+# TODO: How can this work?
+# It should put a node (possibly with some title) at every branch of the tree
+# in the same spot. I could do this by going to the root of the tree and
+# adding a node to every branch (child) from there -- it would need to be recursive.
+#	If THIS area contains the right time put a node there
+#	Otherwise ask your children to check the same thing
+#	If you're past the time throw an error or something, that shouldn't happen the way I just described it
+def insert_node_at_time(tree, time): #TODO: Does it need to be a tree, or is it just any node?
+	start_point = tree.time
+	possible_end_points = []
+	for child in tree.children:
+		possible_end_points.append(child.time)
+	end_point = min(possible_end_points)
+	
+	if start_point >= time and time > end_point: 
+		print("IDK what to do but it should go here", tree, start_point, time, end_point)
+	else:
+		for child in tree.children:
+			insert_node_at_time(child, time)
+
 def get_example_tree():
 	t = Tree("challenge.nwk")
 	apply_time_values(t)
 
 	point = NodeStyle()
-	point["size"] = 5
 	point["fgcolor"] = "lightgreen"
+	point["shape"] = "square" 
 
 	recent = most_recent_mixed_node(t)
 	recent.set_style(point)

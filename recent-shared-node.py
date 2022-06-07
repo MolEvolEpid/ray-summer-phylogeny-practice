@@ -2,8 +2,6 @@
 
 from ete3 import Tree
 
-t = Tree("challenge.nwk")
-
 # Return whether a node has descendants with multiple names.
 # TODO: For more complex trees I need to check the person, not the name itself.
 def is_mixed_node(node):
@@ -32,10 +30,22 @@ def distance_from_root(node):
 # the root of the tree
 # TODO: This may actually not be working. Test with more trees ASAP.
 def most_recent_mixed_node(tree):
-	best = [None, 0]
+	best = tree
 	for node in get_mixed_nodes(tree):
-		total_dist = distance_from_root(node)
-		if total_dist > best[1]:
-			best[0] = node
-			best[1] = total_dist
+		if node.time < best.time:
+			best = node
 	return best
+
+# Add a time parameter to each node in the tree reflecting its distance from
+# the tips of the tree. The most recent node will have a time of 0, and the
+# oldest nodes will have large positive times.
+def apply_time_values(tree):
+	tree_max = tree.get_farthest_node()[1]
+	for node in tree.traverse():
+		node_dist = distance_from_root(node)
+		node.time = tree_max - node_dist
+
+if __name__ == "__main__":
+	t = Tree("challenge.nwk")
+	apply_time_values(t)
+

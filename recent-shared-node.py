@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
 
-from ete3 import Tree
-
-# Return whether a node has descendants with multiple names.
-# TODO: For more complex trees I need to check the person, not the name itself.
-def is_mixed_node(node):
-	if len(set(node.get_leaf_names())) == 1:
-		return False
-	else:
-		return True
+from ete3 import Tree, NodeStyle, TreeStyle
 
 # Create a list of all nodes in a tree that satisfy is_mixed_node.
 def get_mixed_nodes(tree):
 	mixed = []
 	for node in tree.traverse():
-		if is_mixed_node(node):
+		if len(set(node.get_leaf_names())) > 1:
 			mixed.append(node)
 	return mixed
 
@@ -45,7 +37,23 @@ def apply_time_values(tree):
 		node_dist = distance_from_root(node)
 		node.time = tree_max - node_dist
 
-if __name__ == "__main__":
+def get_example_tree():
 	t = Tree("challenge.nwk")
 	apply_time_values(t)
+
+	point = NodeStyle()
+	point["size"] = 5
+	point["fgcolor"] = "lightgreen"
+
+	recent = most_recent_mixed_node(t)
+	recent.set_style(point)
+
+	ts = TreeStyle()
+
+	return t, ts
+
+if __name__ == "__main__":
+	t, ts = get_example_tree()
+	# t.render("it_not_work.png", w=400, tree_style=ts)
+	t.show(tree_style=ts)
 

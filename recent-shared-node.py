@@ -8,15 +8,11 @@ class TimeTree(Tree):
 	lengths. The most recent node is at time 0, and those further back in the tree
 	have positive time values so that they can be used in coalescent modeling.
 
-	TODO: Document all of these procedures ASAP
-
-	TODO: Should I move get_mixed_nodes(tree) into here? I think maybe.
-
 	apply_time_values()
 		Based on the branch lengths in the tree, assign time values starting
 		from zero at the furthest leaf and increasing backwards in the tree.
 		Automatically called on __init__.
-
+	
 	get_between_times(start, end)
 		Return a list of all nodes between the start and end time specified.
 
@@ -36,7 +32,6 @@ class TimeTree(Tree):
 		super(TimeTree, self).__init__(*args, **kwargs)
 		self.apply_time_values()
 		
-	
 	def apply_time_values(self):
 		tree_max = self.get_farthest_node()[1]
 		for node in self.traverse():

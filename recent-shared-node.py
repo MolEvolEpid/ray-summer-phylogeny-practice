@@ -30,15 +30,17 @@ class TimeTree(Tree):
 
 	def __init__(self, *args, **kwargs):
 		new_kwargs = {}
+		# TODO: how do I make this suck less? how does inheritance even work? ugh.
 		for key, value in kwargs.items(): 
-			# TODO: How do I make my comnents clear that hosts can be provided as a kwarg by doing hosts=hosts ?
 			if key != "hosts":
 				new_kwargs[key] = value
-		super(TimeTree, self).__init__(*args[:1], **new_kwargs)
-		if "hosts" in kwargs.keys():
-			self.populate_hosts(hosts)
-		self.populate_times()
 		
+		super(TimeTree, self).__init__(*args, **new_kwargs)
+		
+		self.populate_times()
+		print(self.get_leaves())
+		self.populate_hosts(hosts)
+
 	def populate_times(self):
 		tree_max = self.get_farthest_node()[1]
 		for node in self.traverse():
@@ -46,8 +48,14 @@ class TimeTree(Tree):
 			node.time = tree_max - node_dist
 
 	def populate_hosts(self, hosts):
-		for node in self.get_leaves():
-			node.host = hosts[node.name]
+		if type(hosts) == dict: #TODO: This breaks because newick is not loaded right. why?
+			print(self.get_leaves()) # for some reason this self has no leaves why?
+			for node in self.get_leaves():
+				print("Node name", node.name)
+				node.host = hosts[node.name]
+		else:
+			for node in self.get_leaves():
+				node.host = node.name
 	
 	def get_leaf_hosts(self):
 		leaf_hosts = []
@@ -89,7 +97,7 @@ def get_example_tree(filename):
 	if hosts:
 		t = TimeTree(newick, hosts=hosts)
 	else:
-		t = TimeTree(newick)
+		t = TimeTree(newick, hosts=None)
 
 	endpoint = NodeStyle()
 	endpoint["fgcolor"] = "lightgreen"
@@ -122,5 +130,7 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
-	t, ts = get_example_tree("tree001.txt")
-	t.show(tree_style=ts)
+	#t, ts = get_example_tree("tree001.txt")
+	#t.show(tree_style=ts)
+	newick, hosts = read_simulator_file("tree001.txt")
+	t = TimeTree(newick, hosts=hosts)

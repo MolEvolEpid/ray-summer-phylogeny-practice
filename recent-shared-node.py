@@ -30,11 +30,12 @@ class TimeTree(Tree):
 
 	def __init__(self, *args, **kwargs):
 		new_kwargs = {}
-		for key, value in kwargs.items():
+		for key, value in kwargs.items(): 
+			# TODO: How do I make my comnents clear that hosts can be provided as a kwarg by doing hosts=hosts ?
 			if key != "hosts":
 				new_kwargs[key] = value
 		super(TimeTree, self).__init__(*args[:1], **new_kwargs)
-		if "hosts" in **kwargs.keys():
+		if "hosts" in kwargs.keys():
 			self.populate_hosts(hosts)
 		self.populate_times()
 		
@@ -45,7 +46,7 @@ class TimeTree(Tree):
 			node.time = tree_max - node_dist
 
 	def populate_hosts(self, hosts):
-		for node in self.traverse():
+		for node in self.get_leaves():
 			node.host = hosts[node.name]
 	
 	def get_leaf_hosts(self):
@@ -54,21 +55,21 @@ class TimeTree(Tree):
 			if node.is_leaf():
 				leaf_hosts.append(node.host)
 		return leaf_hosts
-				
+
 	def all_hosts_infected_node(self):
-		names_overall = set(self.get_leaf_names())
-		names_so_far = set()
+		hosts_overall = set(self.get_leaf_hosts())
+		hosts_so_far = set()
 		# check from the closest (oldest) leaf to the newest one
 		for leaf in sorted(self.get_leaves(), key=lambda x: x.time, reverse=True):
-			names_so_far.add(leaf.name)
-			if names_overall == names_so_far:
+			hosts_so_far.add(leaf.host)
+			if hosts_overall == hosts_so_far:
 				return leaf
 		raise TreeError("Could not find any point where all hosts were infected.")
 
 	def get_mixed_nodes(self):
 		mixed = []
 		for node in self.traverse():
-			if len(set(node.get_leaf_names())) > 1:
+			if len(set(node.get_leaf_hosts())) > 1: # TODO: instead of leaf names must be leaf hosts
 				mixed.append(node)
 		return mixed
 
@@ -81,14 +82,14 @@ class TimeTree(Tree):
 
 
 def get_example_tree(filename):
-	# TODO: This is a bad way to solve this problem! 
-	# What it does now is try to load it as a normal Newick file, and
-	# if it can't be done tries to read it in as a sort of Nexus file.
-	try:
-		t = TimeTree(filename)
-	except NewickError:
-		newick, hosts = read_simulator_file(filename)
-		t = TimeTree(newick, hosts)
+	# TODO: This is a bad way to solve this problem! Optimally, TimeTree
+	# should know not to do anything if hosts is None. BUT, it'll just make that
+	# __init__ method even uglier and I feel like there must be a better way.
+	newick, hosts = read_simulator_file(filename)
+	if hosts:
+		t = TimeTree(newick, hosts=hosts)
+	else:
+		t = TimeTree(newick)
 
 	endpoint = NodeStyle()
 	endpoint["fgcolor"] = "lightgreen"
@@ -108,14 +109,18 @@ def get_example_tree(filename):
 
 def read_simulator_file(filename):
 	with open(filename) as f:
-		newick = f.readline().rstrip()
-		rest = list(map(str.rstrip, f.readlines()[1:]))
-		hosts = {}
-		for entry in rest:
-			split = entry.split(" ")
-			hosts[split[0]] = int(split[1])
+		lines = f.readlines()
+		newick = lines[0].rstrip()
+		if len(lines) > 1:
+			rest = list(map(str.rstrip, lines[1:]))
+			hosts = {}
+			for entry in rest:
+				split = entry.split(" ")
+				hosts[split[0]] = int(split[1])
+		else:
+			hosts = None
 	return newick, hosts
 
 if __name__ == "__main__":
-	newick, hosts = read_simulator_file("tree001.txt")
-
+	t, ts = get_example_tree("tree001.txt")
+	t.show(tree_style=ts)

@@ -29,17 +29,8 @@ class TimeTree(Tree):
 	"""
 
 	def __init__(self, *args, **kwargs):
-		new_kwargs = {}
-		# TODO: how do I make this suck less? how does inheritance even work? ugh.
-		for key, value in kwargs.items(): 
-			if key != "hosts":
-				new_kwargs[key] = value
-		
-		super(TimeTree, self).__init__(*args, **new_kwargs)
-		
+		super(TimeTree, self).__init__(*args, **kwargs)
 		self.populate_times()
-		print(self.get_leaves())
-		self.populate_hosts(hosts)
 
 	def populate_times(self):
 		tree_max = self.get_farthest_node()[1]
@@ -48,14 +39,16 @@ class TimeTree(Tree):
 			node.time = tree_max - node_dist
 
 	def populate_hosts(self, hosts):
-		if type(hosts) == dict: #TODO: This breaks because newick is not loaded right. why?
-			print(self.get_leaves()) # for some reason this self has no leaves why?
-			for node in self.get_leaves():
-				print("Node name", node.name)
-				node.host = hosts[node.name]
+		if type(hosts) == dict: 
+			for node in self.traverse():
+				if node.name in hosts:
+					node.host = hosts[node.name]
+		elif hosts == None:
+			for node in self.traverse():
+				if node.name:
+					node.host = node.name
 		else:
-			for node in self.get_leaves():
-				node.host = node.name
+			raise TimeTreeError("Could not populate hosts. Hosts should be either a dictionary of names and hosts or None.")
 	
 	def get_leaf_hosts(self):
 		leaf_hosts = []
@@ -90,15 +83,10 @@ class TimeTree(Tree):
 
 
 def get_example_tree(filename):
-	# TODO: This is a bad way to solve this problem! Optimally, TimeTree
-	# should know not to do anything if hosts is None. BUT, it'll just make that
-	# __init__ method even uglier and I feel like there must be a better way.
 	newick, hosts = read_simulator_file(filename)
-	if hosts:
-		t = TimeTree(newick, hosts=hosts)
-	else:
-		t = TimeTree(newick, hosts=None)
-
+	t = TimeTree(newick)
+	t.populate_hosts(hosts)
+	
 	endpoint = NodeStyle()
 	endpoint["fgcolor"] = "lightgreen"
 
@@ -127,10 +115,9 @@ def read_simulator_file(filename):
 				hosts[split[0]] = int(split[1])
 		else:
 			hosts = None
+
 	return newick, hosts
 
 if __name__ == "__main__":
-	#t, ts = get_example_tree("tree001.txt")
-	#t.show(tree_style=ts)
-	newick, hosts = read_simulator_file("tree001.txt")
-	t = TimeTree(newick, hosts=hosts)
+	t, ts = get_example_tree("tree001.txt")
+	t.show(tree_style=ts)

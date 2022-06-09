@@ -1,20 +1,26 @@
+#!/usr/bin/env python3
+
+# timetree.py
+#
+# TimeTree is an ete3 Tree wit timestamp[s associated with the branch lengths.
+# The most recent node is at time 0, and those closer to the root of the tree
+# have larger times. 
+
 from ete3 import Tree
 
 class TimeTree(Tree):
 
 	"""
-	TimeTree is an ete3 Tree with timestamps associated with the branch
-	lengths. The most recent node is at time 0, and those further back in the tree
-	have positive time values so that they can be used in coalescent modeling.
-
 	populate_times()
 		Add a time attribute to each node based on its distance from the tips of 
-		the tree (lower is more recent).
+		the tree (lower is more recent). 
+		Run on __init__()
 
 	populate_hosts(hosts)
 		Add a host attribute to each node. hosts can either being a dictionary containing
 		node names and their hosts or the value None, in which case host will have the
 		same value as name.
+		NOT run on __init__(), be careful!
 
 	all_hosts_infected_node()
 		Return the first node where all hosts are infected.
@@ -33,18 +39,18 @@ class TimeTree(Tree):
 	def populate_times(self):
 		tree_max = self.get_farthest_node()[1]
 		for node in self.traverse():
-			node_dist = self.get_distance(node) 
-			node.time = tree_max - node_dist
+			node_dist = self.get_distance(node)
+			node.add_feature("time", tree_max - node_dist)
 
 	def populate_hosts(self, hosts):
 		if type(hosts) == dict: 
 			for node in self.traverse():
 				if node.name in hosts:
-					node.host = hosts[node.name]
+					node.add_feature("host", hosts[node.name])
 		elif hosts == None:
 			for node in self.traverse():
 				if node.name:
-					node.host = node.name
+					node.add_feature("host", node.name)
 		else:
 			raise TimeTreeError("Could not populate hosts. Hosts should be either a dictionary of names and hosts or None.")
 	

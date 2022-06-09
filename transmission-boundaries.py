@@ -6,21 +6,13 @@ from timetree import TimeTree
 def custom_tree_style(tree):
 	startpoint = tree.most_recent_mixed_node()
 	endpoint = tree.all_hosts_infected_node()
-	distance = 6 * tree.get_distance(startpoint, endpoint) #TODO: Does this actually work?
-
-	print(distance)
 
 	highlight = NodeStyle()
 	highlight["fgcolor"] = "red"
 	hidden = NodeStyle()
 	hidden["size"] = 0
 
-	# TODO: If I can adjust this width and height, it will all work
-	test_rect = RectFace(distance, 197, "lightgreen", "lightgreen")
-
 	for node in tree.traverse():
-		if node == endpoint:
-			node.add_face(test_rect, column=0, position="float-behind")
 		if node == startpoint or node == endpoint:
 			node.set_style(highlight)
 		else:
@@ -46,7 +38,7 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
-	newick, hosts = read_simulator_file("challenge.nwk")
+	newick, hosts = read_simulator_file("tests/challenge.nwk")
 	t = TimeTree(newick)
 	t.populate_hosts(hosts)
 

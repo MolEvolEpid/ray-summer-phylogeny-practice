@@ -52,7 +52,7 @@ class TimeTree(Tree):
 				if node.name:
 					node.add_feature("host", node.name)
 		else:
-			raise TimeTreeError("Could not populate hosts. Hosts should be either a dictionary of names and hosts or None.")
+			raise TreeError("Could not populate hosts. Hosts should be either a dictionary of names and hosts or None.")
 	
 	def get_leaf_hosts(self):
 		leaf_hosts = []
@@ -69,7 +69,7 @@ class TimeTree(Tree):
 			hosts_so_far.add(leaf.host)
 			if hosts_overall == hosts_so_far:
 				return leaf
-		raise TimeTreeError("Could not find any point where all hosts were infected.")
+		raise TreeError("Could not find any point where all hosts were infected.")
 
 	def get_mixed_nodes(self):
 		mixed = []
@@ -87,4 +87,4 @@ class TimeTree(Tree):
 					recent = node
 			return recent
 		else:
-			raise TimeTreeError("There are no mixed nodes on the tree.")
+			raise TreeError("There are no mixed nodes on the tree.")

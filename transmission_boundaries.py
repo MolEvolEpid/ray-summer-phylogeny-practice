@@ -1,25 +1,24 @@
 #!/usr/bin/env python3
 
 from ete3 import NodeStyle, TreeStyle, RectFace
-from timetree import TimeTree
+from time_tree import TimeTree
 
 def custom_tree_style(tree):
 	startpoint = tree.most_recent_mixed_node()
 	endpoint = tree.all_hosts_infected_node()
-
+	
 	highlight = NodeStyle()
 	highlight["fgcolor"] = "red"
 	hidden = NodeStyle()
 	hidden["size"] = 0
-
+	
 	for node in tree.traverse():
 		if node == startpoint or node == endpoint:
 			node.set_style(highlight)
 		else:
 			node.set_style(hidden)
-
 	ts = TreeStyle()
-
+	
 	return ts
 
 def read_simulator_file(filename):
@@ -38,7 +37,7 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
-	newick, hosts = read_simulator_file("output.nwk")
+	newick, hosts = read_simulator_file("tests/challenge.nwk")
 	t = TimeTree(newick)
 	t.populate_hosts(hosts)
 

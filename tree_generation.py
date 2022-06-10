@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import random
+from transmission_boundaries import custom_tree_style
+from time_tree import TimeTree
 
 # NewTree(n)
 # Create a tree with n leaves.
@@ -28,7 +30,7 @@ class NewTree:
 	def generate_leaves(self, n):
 		leaves = []
 		for i in range(n):
-			leaves.append(Node(chr(random.randint(65, 90))))
+			leaves.append(Node(random.choice(['A', 'B'])))
 		return leaves
 
 	def remove_leaf(self, leaf):
@@ -56,12 +58,17 @@ class NewTree:
 	def run(self):
 		while len(self.leaves) > 1:
 			self.timestep()
-			print(self.display_leaves())
-		final_root = self.display_leaves()[0] + ";\n"
-		with open('output.nwk', 'w') as output:
-			output.write(final_root)
+		self.final_root = self.display_leaves()[0] + ";\n"
 
-			
+	def show(self):
+		if hasattr(self, "final_root"):
+			t = TimeTree(self.final_root)
+			t.populate_hosts(None)
+			ts = custom_tree_style(t)
+			t.show(tree_style=ts)
+		else:
+			print("Cannot show final state. First, coalesce the model by running .run()")
+
 
 class Node:
 	def __init__(self, name, dist=1):

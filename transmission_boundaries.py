@@ -2,6 +2,8 @@
 
 from ete3 import NodeStyle, TreeStyle, RectFace
 from time_tree import TimeTree
+import sys
+import os.path
 
 def custom_tree_style(tree):
 	startpoint = tree.most_recent_mixed_node()
@@ -37,9 +39,15 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
-	newick, hosts = read_simulator_file("tests/challenge.nwk")
-	t = TimeTree(newick)
-	t.populate_hosts(hosts)
+	if len(sys.argv) > 1:
+		if os.path.exists(sys.argv[1]):
+			newick, hosts = read_simulator_file(sys.argv[1])
+			t = TimeTree(newick)
+			t.populate_hosts(hosts)
 
-	ts = custom_tree_style(t)
-	t.show(tree_style=ts)
+			ts = custom_tree_style(t)
+			t.show(tree_style=ts)
+		else:
+			raise Exception("The provided file cannot be accessed.")
+	else:
+		raise Exception("This script should be run with the relative path of a newick file as the first argument.")

@@ -38,7 +38,7 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
-	newick, hosts = read_simulator_file("tests/challenge.nwk")
+	newick, hosts = read_simulator_file("output.nwk")
 	t = TimeTree(newick)
 	t.populate_hosts(hosts)
 

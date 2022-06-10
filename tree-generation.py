@@ -28,25 +28,43 @@ class NewTree:
 	def generate_leaves(self, n):
 		leaves = []
 		for i in range(n):
-			leaves.append(Node(i, chr(random.randint(65, 90)), 1))
+			leaves.append(Node(chr(random.randint(65, 90))))
 		return leaves
 
 	def remove_leaf(self, leaf):
 		self.leaves.remove(leaf)
 		del leaf
 
-	def display_leaf(self, leaf):
-		index = self.leaves.index(leaf)
-		self.leaves[index].display()
-
-	def make_sisters(self, leaf1, leaf2, dist):
+	def display_leaves(self):
+		leaves = []
+		for leaf in self.leaves:
+			leaves.append(leaf.display())
+		return leaves
+	
+	def make_sisters(self, leaf1, leaf2, dist=1):
 		leaf1.add_sister(leaf2, dist)
 		self.remove_leaf(leaf2)
 
+	def timestep(self):
+		for node in self.leaves:
+			if random.random() < 0.15:
+				sister = node
+				while sister == node:
+					sister = random.choice(self.leaves)
+				self.make_sisters(node, sister) 
+
+	def run(self):
+		while len(self.leaves) > 1:
+			self.timestep()
+			print(self.display_leaves())
+		final_root = self.display_leaves()[0] + ";\n"
+		with open('output.nwk', 'w') as output:
+			output.write(final_root)
+
+			
 
 class Node:
-	def __init__(self, id, name, dist):
-		self.id = id
+	def __init__(self, name, dist=1):
 		self.name = name
 		self.dist = dist
 

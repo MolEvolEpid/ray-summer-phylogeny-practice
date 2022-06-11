@@ -23,7 +23,6 @@ class NewTree:
 		dist to them.
 	"""
 
-	#TODO: Display should be different
 	def __init__(self, n):
 		self.leaves = self.generate_leaves(n) # TODO: This will only happen once, RIGHT? RIGHT?!
 

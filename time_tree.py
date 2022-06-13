@@ -84,7 +84,7 @@ class TimeTree(Tree):
 		mixed_nodes = self.get_mixed_nodes()
 		if mixed_nodes:
 			for node in self.get_mixed_nodes():
-				if node.time < recent.time and node.time >= latest_possible.time:
+				if node.time < recent.time and node.time > latest_possible.time:
 					recent = node
 			return recent
 		else:

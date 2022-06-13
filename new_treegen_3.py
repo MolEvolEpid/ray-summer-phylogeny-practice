@@ -6,20 +6,26 @@ class Generator:
 		self.tree = tree
 		# self.leaves = []
 		for i in range(n):
-			child = tree.add_child(name=random.choice(["A", "B"]), dist=1)
+			child = tree.add_child(name=random.choice(["A", "B"]), dist=10)
 			# self.leaves.append(child) # TODO: Do I need this or not?
 
 	def step(self):
 		if random.random() < 0.15:
-			pair = random.sample(self.tree.get_leaves(), k=2)
-			self.make_sisters(pair)
+			self.make_pair()
 
-	def make_sisters(self, group):
+	def make_pair(self):
+		pair = random.sample(self.tree.get_children(), k=2)
 		branch = self.tree.add_child(dist=1)
-		for child in group:
+		for child in pair:
 			new_dist = child.dist - 1 # TODO: What should 1 actually be? What if child.dist is too low?
 			branch.add_child(child=child, dist=new_dist)
 			self.tree.remove_child(child)
+
+	def run(self):
+		while len(self.tree.children) > 2:
+			self.step()
+		# self.tree.write() is throwing an error. why?!?!?!
+		print(self.tree.write())
 
 """
 To add a midpoint, do this:

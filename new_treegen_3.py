@@ -6,7 +6,7 @@ class Generator:
 		self.tree = tree
 		# self.leaves = []
 		for i in range(n):
-			child = tree.add_child(name=random.choice(["A", "B"]))
+			child = tree.add_child(name=random.choice(["A", "B"]), dist=1)
 			# self.leaves.append(child) # TODO: Do I need this or not?
 
 	def step(self):
@@ -15,12 +15,19 @@ class Generator:
 			self.make_sisters(pair)
 
 	def make_sisters(self, group):
-		first = group[0]
-		for sister in group[1:]:
-			first.add_sister(sister, dist=1) # TODO: but how does the time translate NOW?!
+		branch = self.tree.add_child(dist=1)
+		for child in group:
+			new_dist = child.dist - 1 # TODO: What should 1 actually be? What if child.dist is too low?
+			branch.add_child(child=child, dist=new_dist)
+			self.tree.remove_child(child)
+
+"""
+To add a midpoint, do this:
+	Assign what will be the new children to variables
+	Call t.add_child(dist=MATH) where math is part of the new distance (half of current time?)
+		Or alternately, use 1 and add to the rest of the nodes in the tree so they match?
+	This will leave the original children. To remove them, do:
+		t.remove_child(a) and t.remove_child(b)
+"""
 
 
-
-if __name__ == '__main__':
-	t = TimeTree()
-	g = Generator(t)

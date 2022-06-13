@@ -79,11 +79,12 @@ class TimeTree(Tree):
 		return mixed
 
 	def most_recent_mixed_node(self):
+		latest_possible = self.all_hosts_infected_node()
 		recent = self
 		mixed_nodes = self.get_mixed_nodes()
 		if mixed_nodes:
 			for node in self.get_mixed_nodes():
-				if node.time < recent.time:
+				if node.time < recent.time and node.time >= latest_possible.time:
 					recent = node
 			return recent
 		else:

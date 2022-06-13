@@ -6,6 +6,12 @@ import sys
 import os.path
 
 def custom_tree_style(tree):
+	"""
+	Given a TimeTree object, iterate through the nodes and
+	place a red dot on the most recent mixed node and the node
+	where all hosts are infected. Return a TreeStyle containing
+	these changes.
+	"""
 	startpoint = tree.most_recent_mixed_node()
 	endpoint = tree.all_hosts_infected_node()
 	
@@ -24,6 +30,10 @@ def custom_tree_style(tree):
 	return ts
 
 def read_simulator_file(filename):
+	"""
+	Read a simulator file in order to extract the newick file from it
+	(the first line) and the host information if available (any subsequent lines).
+	"""
 	with open(filename) as f:
 		lines = f.readlines()
 		newick = lines[0].rstrip()
@@ -39,6 +49,10 @@ def read_simulator_file(filename):
 	return newick, hosts
 
 if __name__ == "__main__":
+	"""
+	Call the file from the command line with a relative filename in order to 
+	draw a tree based on that file.
+	"""
 	if len(sys.argv) > 1:
 		if os.path.exists(sys.argv[1]):
 			newick, hosts = read_simulator_file(sys.argv[1])

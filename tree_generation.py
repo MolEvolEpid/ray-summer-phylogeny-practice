@@ -11,26 +11,30 @@ class TreeGenerator:
 			self.nodes.append(node)
 
 	def find_weighted_partner(self, node):
-		# Given a node, find the other possible nodes it is most likely
-		# to pair with. 
-		# A node is most likely to pair with one from its own host, then one of an 
-		# unknown host, then one of a different host.
+		"""
+		Given a node, find the other possible nodes it is most likely
+		to pair with. 
+		A node is most likely to pair with one from its own host, then one of an 
+		unknown host, then one of a different host.
+		"""
 		partners = [item for item in self.nodes if item != node]
 		
 		weights = []
 		for partner in partners:
-			if partner.host == node.host:
+			if partner.host == "?": # undetermined host is a base case so it gets weight 1
 				weights.append(1)
-			elif partner.host == "?":
+			elif partner.host == node.host: # same host is more likely
+				weights.append(2)
+			else: # different host is less likely
 				weights.append(0.5)
-			else:
-				weights.append(0.25)
 
 		return random.choices(partners, weights=weights)[0]
 
 	def intuitive_inheritance(self, child1, child2):
-		# Based on two child nodes, decide what host their parent is most
-		# likely to have.
+		"""
+		Based on two child nodes, decide what host their parent is most
+		likely to have.
+		"""
 		h1 = child1.host
 		h2 = child2.host
 		if h1 == h2:
@@ -43,13 +47,20 @@ class TreeGenerator:
 			return "?"
 
 	def step(self):
-		# Take a timestep.
+		"""
+		Take a timestep, randomly deciding whether to take any actions.
+		At the moment this is redundant, but when time is a bigger factor
+		it will be important that something does not necessarily happen
+		at every timestep.
+		"""
 		if random.random() < 0.15:
 			self.make_pair()
 
 	def make_pair(self):
-		# Choose two nodes and combine their lineages at a common parent.
-		# That parent is then able to pair with other nodes.
+		"""
+		Choose two nodes and combine their lineages at a common parent.
+		That parent is then able to pair with other nodes.
+		"""
 		first = random.choice(self.nodes)
 		second = self.find_weighted_partner(first)
 
@@ -62,14 +73,19 @@ class TreeGenerator:
 		self.nodes.append(parent)
 
 	def run(self):
+		"""
+		Run the model until only one node is left and return that node.
+		"""
 		while len(self.nodes) > 1:
 			self.step()
 		return self.nodes[0]
 
 if __name__ == '__main__':
+	"""
+	Run from the command line, prints an example tree with 15 nodes.
+	"""
 	g = TreeGenerator(15)
 	end = g.run()
-	print(end) # text representation of the tree
-	# print(end.write(format=1)) # the tree's newick format. can use outfile= if you want
-
+	print(end)
+	#end.write(format=1, outfile="tests/output.nwk")
 

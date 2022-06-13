@@ -15,10 +15,10 @@ class Generator:
 
 	def make_pair(self):
 		pair = random.sample(self.tree.get_children(), k=2)
-		branch = self.tree.add_child(dist=1)
+		new_dist = pair[0].dist - 1
+		branch = self.tree.add_child(dist=new_dist)
 		for child in pair:
-			new_dist = child.dist - 1 # TODO: What should 1 actually be? What if child.dist is too low?
-			branch.add_child(child=child, dist=new_dist)
+			branch.add_child(child=child, dist=1)
 			self.tree.remove_child(child)
 
 	def run(self):

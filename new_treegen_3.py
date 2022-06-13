@@ -6,7 +6,7 @@ class Generator:
 		self.tree = tree
 		# self.leaves = []
 		for i in range(n):
-			child = tree.add_child(name=random.choice(["A", "B"]), dist=10)
+			child = self.tree.add_child(name=random.choice(["A", "B"]), dist=10)
 			# self.leaves.append(child) # TODO: Do I need this or not?
 
 	def step(self):
@@ -24,16 +24,14 @@ class Generator:
 	def run(self):
 		while len(self.tree.children) > 2:
 			self.step()
+		return self.tree
 		# self.tree.write() is throwing an error. why?!?!?!
-		print(self.tree.write())
+		# print(self.tree.write())
 
-"""
-To add a midpoint, do this:
-	Assign what will be the new children to variables
-	Call t.add_child(dist=MATH) where math is part of the new distance (half of current time?)
-		Or alternately, use 1 and add to the rest of the nodes in the tree so they match?
-	This will leave the original children. To remove them, do:
-		t.remove_child(a) and t.remove_child(b)
-"""
+
+if __name__ == '__main__':
+	g = Generator(TimeTree(), 10)
+	end = g.run()
+	print(end)
 
 

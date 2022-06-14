@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 import sys # at the moment I use it for sys.argv but maybe I don't need that idk
 import math
+import random
 
 def count_faces(string):
 	"""
@@ -40,7 +40,7 @@ def likelihood(p, heads, tails):
 def log_likelihood(p, heads, tails):
 	"""
 	Calculate the log likelihood of a certain p (0 to 1, exclusive)
-	based on observednumbers of heads and tails.
+	based on observed numbers of heads and tails.
 	"""
 	bc = binomial_coefficient(heads, tails) 
 	return bc * (np.log(pow(p, heads)) + np.log(pow(1-p, tails)))
@@ -96,6 +96,26 @@ def plot_likelihood(heads, tails):
 	
 	plt.ylim(0, max(y)) #TODO: Should it be 0, or should I allow it to show -0.02?
 	plt.show()
+
+def generate_sequence(p, n):
+	"""
+	Generate a sequence of n length, where p is the probability
+	to get a head when flipping the coin.
+	"""
+	heads = 0
+	tails = 0
+	for i in range(n):
+		if random.random() <= p:
+			heads += 1
+		else:
+			tails += 1
+	if heads == 0: # A lot of these stats break if either value is zero
+		heads += 1
+		tails -= 1
+	elif tails == 0:
+		tails += 1
+		heads -= 1
+	return heads, tails
 
 
 if __name__ == "__main__":

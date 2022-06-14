@@ -76,6 +76,7 @@ def plot_likelihood(heads, tails):
 	ax.set_title("95% Confidence Interval of p")
 	ax.fill_between(x, 0, y, where=(np.array(x) > low_ci) & (np.array(x) < high_ci), facecolor="lightgreen")
 	ax.axvline(x=p_sample, color="blue", linestyle="--")
+	plt.xticks(np.arange(0, 1.01, 0.10))
 	
 	plt.ylim(0, max(y)) 
 	plt.show()
@@ -111,7 +112,7 @@ if __name__ == "__main__":
 		if heads + tails == 0:
 			raise Exception("Make sure your input string is made of H and T, separated by spaces")
 	except IndexError:
-		raise Exception("Make sure to run the script with the first argument as a string of H's and T's")
+		raise Exception("Make sure to run the script with the first argument as a string \nof H's and T's or numbers for p and n")
 
 	plot_likelihood(heads, tails)
 

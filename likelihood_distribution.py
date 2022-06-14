@@ -7,7 +7,6 @@ import scipy.stats as stats
 import sys # at the moment I use it for sys.argv but maybe I don't need that idk
 import math
 
-
 def count_faces(string):
 	"""
 	Given a string of space-separated letters, count 
@@ -21,7 +20,6 @@ def count_faces(string):
 			tails += 1
 	return heads, tails
 
-
 def binomial_coefficient(heads, tails):
 	"""
 	Calculate a binomial coefficient based on the number of heads and tails
@@ -31,7 +29,6 @@ def binomial_coefficient(heads, tails):
 	"""
 	return math.factorial(heads + tails) / (math.factorial(heads) * math.factorial(tails))
 
-
 def likelihood(p, heads, tails):
 	"""
 	Calculate the likelihood of a certain p (0 to 1, exclusive) 
@@ -40,7 +37,6 @@ def likelihood(p, heads, tails):
 	bc = binomial_coefficient(heads, tails)
 	return bc * pow(p, heads) * pow(1-p, tails)
 
-
 def log_likelihood(p, heads, tails):
 	"""
 	Calculate the log likelihood of a certain p (0 to 1, exclusive)
@@ -48,7 +44,6 @@ def log_likelihood(p, heads, tails):
 	"""
 	bc = binomial_coefficient(heads, tails) 
 	return bc * (np.log(pow(p, heads)) + np.log(pow(1-p, tails)))
-
 
 def high_low_ci(heads, tails):
 	"""
@@ -69,7 +64,6 @@ def high_low_ci(heads, tails):
 	high_ci = math.pow(math.e, phi_high) / (1 + math.pow(math.e, phi_high))
 	return low_ci, high_ci
 
-
 def likelihood_curve(heads, tails):
 	"""
 	Given a number of heads and tails, construct a curve showing
@@ -80,7 +74,6 @@ def likelihood_curve(heads, tails):
 	for p in x:
 		y.append(likelihood(p, heads, tails)) 
 	return x, y
-
 
 def plot_likelihood(heads, tails):
 	"""
@@ -106,5 +99,12 @@ def plot_likelihood(heads, tails):
 
 
 if __name__ == "__main__":
-	heads, tails = count_faces(sys.argv[1])
-	plot_likelihood(heads, tails)
+	try:
+		if type(sys.argv[1]) == str:
+			heads, tails = count_faces(sys.argv[1])
+			if heads + tails == 0:
+				raise Exception("Input string does not seem to contain any H's or T's")
+			else:
+				plot_likelihood(heads, tails)
+	except IndexError:
+		raise Exception("Make sure to run the script with the first argument as a string of H's and T's")

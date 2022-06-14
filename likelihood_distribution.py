@@ -82,12 +82,15 @@ def likelihood_curve(heads, tails):
 	return x, y
 
 
-if __name__ == "__main__":
-	h, t = count_faces(sys.argv[1]) # TODO: add some sort of checking
-	p_sample = h / (h + t)
-	x, y = likelihood_curve(h, t)
-	low_ci, high_ci = high_low_ci(h, t)
-	#max_pos = y.index(max(y))
+def plot_likelihood(heads, tails):
+	"""
+	Plot the likelihood curve of p based on the number of heads
+	and tails and highlight the 95% confidence interval of the 
+	curve.
+	"""
+	p_sample = heads / (heads + tails)
+	x, y = likelihood_curve(heads, tails)
+	low_ci, high_ci = high_low_ci(heads, tails)
 
 	fig, ax = plt.subplots(figsize=(12, 5))
 	
@@ -97,6 +100,11 @@ if __name__ == "__main__":
 	ax.set_title("95% Confidence Interval of p")
 	ax.fill_between(x, 0, y, where=(np.array(x) > low_ci) & (np.array(x) < high_ci), facecolor="lightgreen")
 	ax.axvline(x=p_sample, color="blue", linestyle="--")
-	#ax.grid(False)
-
+	
+	plt.ylim(0, max(y)) #TODO: Should it be 0, or should I allow it to show -0.02?
 	plt.show()
+
+
+if __name__ == "__main__":
+	heads, tails = count_faces(sys.argv[1])
+	plot_likelihood(heads, tails)

@@ -3,14 +3,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
-import sys # at the moment I use it for sys.argv but maybe I don't need that idk
+import sys 
 import math
 import random
 
 def count_faces(string):
 	"""
 	Given a string of space-separated letters, count 
-	the number of times"H" and "T" occur
+	the number of times "H" and "T" occur
 	"""
 	heads = tails = 0
 	for face in string.split():
@@ -20,30 +20,13 @@ def count_faces(string):
 			tails += 1
 	return heads, tails
 
-def binomial_coefficient(heads, tails):
-	"""
-	Calculate a binomial coefficient based on the number of heads and tails
-	observed, representing the number of ways a certain number of heads could
-	be rolled as described in Etz (2018).
-		https://doi.org/10.1177/2515245917744314
-	"""
-	return math.factorial(heads + tails) / (math.factorial(heads) * math.factorial(tails))
-
 def likelihood(p, heads, tails):
 	"""
 	Calculate the likelihood of a certain p (0 to 1, exclusive) 
 	based on observed numbers of heads and tails. 
 	"""
-	bc = binomial_coefficient(heads, tails)
+	bc = math.factorial(heads + tails) / (math.factorial(heads) * math.factorial(tails)) 
 	return bc * pow(p, heads) * pow(1-p, tails)
-
-def log_likelihood(p, heads, tails):
-	"""
-	Calculate the log likelihood of a certain p (0 to 1, exclusive)
-	based on observed numbers of heads and tails.
-	"""
-	bc = binomial_coefficient(heads, tails) 
-	return bc * (np.log(pow(p, heads)) + np.log(pow(1-p, tails)))
 
 def high_low_ci(heads, tails):
 	"""
@@ -94,7 +77,7 @@ def plot_likelihood(heads, tails):
 	ax.fill_between(x, 0, y, where=(np.array(x) > low_ci) & (np.array(x) < high_ci), facecolor="lightgreen")
 	ax.axvline(x=p_sample, color="blue", linestyle="--")
 	
-	plt.ylim(0, max(y)) #TODO: Should it be 0, or should I allow it to show -0.02?
+	plt.ylim(0, max(y)) 
 	plt.show()
 
 def generate_sequence(p, n):
@@ -120,11 +103,15 @@ def generate_sequence(p, n):
 
 if __name__ == "__main__":
 	try:
-		if type(sys.argv[1]) == str:
-			heads, tails = count_faces(sys.argv[1])
-			if heads + tails == 0:
-				raise Exception("Input string does not seem to contain any H's or T's")
-			else:
-				plot_likelihood(heads, tails)
+		p = float(sys.argv[1])
+		n = int(sys.argv[2])
+		heads, tails = generate_sequence(p, n)
+	except ValueError:
+		heads, tails = count_faces(sys.argv[1])
+		if heads + tails == 0:
+			raise Exception("Make sure your input string is made of H and T, separated by spaces")
 	except IndexError:
 		raise Exception("Make sure to run the script with the first argument as a string of H's and T's")
+
+	plot_likelihood(heads, tails)
+

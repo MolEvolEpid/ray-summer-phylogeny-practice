@@ -3,9 +3,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
-import sys 
+import random 
 import math
-import random
+import sys
 
 def count_faces(string):
 	"""
@@ -76,9 +76,9 @@ def plot_likelihood(heads, tails):
 	ax.set_title("95% Confidence Interval of p")
 	ax.fill_between(x, 0, y, where=(np.array(x) > low_ci) & (np.array(x) < high_ci), facecolor="lightgreen")
 	ax.axvline(x=p_sample, color="blue", linestyle="--")
-	plt.xticks(np.arange(0, 1.01, 0.10))
 	
-	plt.ylim(0, max(y)) 
+	plt.xticks(np.arange(0, 1.01, 0.10))
+	plt.ylim(0, max(y) + 0.01) 
 	plt.show()
 
 def generate_sequence(p, n):
@@ -86,7 +86,7 @@ def generate_sequence(p, n):
 	Generate a sequence of n length, where p is the probability
 	to get a head when flipping the coin.
 	"""
-	heads = 0
+	heads = tails = 0
 	tails = 0
 	for i in range(n):
 		if random.random() <= p:
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 		if heads + tails == 0:
 			raise Exception("Make sure your input string is made of H and T, separated by spaces")
 	except IndexError:
-		raise Exception("Make sure to run the script with the first argument as a string \nof H's and T's or numbers for p and n")
+		raise Exception("Make sure to run the script with arguments!\nYou can either provide a string of H's and T's or two numbers representing p and n.")
 
 	plot_likelihood(heads, tails)
 

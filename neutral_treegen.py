@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+"""
+Based on figures 1 and 2 in Nordborg (2000), which give an example of how
+coalescence works on a neutral model where no coalescence is more likely
+than another.
+
+Nordborg, M. (2000). Coalescent Theory.
+
+Sorry that citation isn't very helpful, I can't find any info about the paper.
+It seems to be a part of a university publication, but that's all I have.
+"""
+
 import random
 from ete3 import TreeNode
 

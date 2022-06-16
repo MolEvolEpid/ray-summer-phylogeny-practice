@@ -13,6 +13,7 @@ It seems to be a part of a university publication, but that's all I have.
 
 import random
 from ete3 import TreeNode
+import matplotlib.pyplot as plt
 
 def create_nodes(N):
 	nodes = []
@@ -33,19 +34,30 @@ def step(nodes, N):
 	return parents
 
 def generate_tree(N):
+	times = [0]
+	lineages = [N]
+
 	nodes = create_nodes(N)
+	current_time = 0
 	while len(nodes) > 1:
 		nodes = step(nodes, N)
-	return nodes[0]
+		current_time += 1
+		times.append(current_time)
+		lineages.append(len(nodes))
+	return nodes[0], times, lineages
+
+def likelihood_curve(N):
+	# what on earth should the curve be??!?!?!?!?!
+	# new idea: start with a bunch of lineages and plot how many there are at
+	# different times and maybe that will be something that's even vaguely useful
+	pass
+
+def plot_lineages(N):
+	tree, x, y = generate_tree(N)
+	plt.plot(x, y)
+	plt.show()
+	print(times)
+	print(lineages)
 
 if __name__ == "__main__":
-	end = generate_tree(10)
-	end.show()
-
-	# This will falsely show chains of single parents (like 1-3-3-2-5-9) as a straight
-	# line, but that' less important. I think it's following Nordborg's diagram
-	# otherwise, especially how there is more coalescence closer to time 0.
-	#
-	# This makes sense, as N never goes down (1/N never goes up) but there are 
-	# fewer nodes to potentially coalesce as the model progresses. Is that a false 
-	# understanding, or is it what actually happens?
+	plot_lineages(100)

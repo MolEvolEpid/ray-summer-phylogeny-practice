@@ -12,14 +12,14 @@ def time_until_coalescence(N, k):
     nodes = range(k) # ensure that all are unique in the first step (time 1)
     time = 0
     while len(nodes) == k: # TODO: Do I want >= k to be safe or is it fine?
-        time += 2
+        time += 1
         nodes = set([random.randint(1, N-1) for i in nodes])
     return time
 
 def batch_sim(N, k, iterations):
     """
     Run many coalescence simulations and concatenate the time that each
-    simulation took.
+    simulation took, keeping N and k constant.
     """
     return [time_until_coalescence(N, k) for i in range(iterations)]
 
@@ -32,4 +32,4 @@ def plot_coalescence_time(N, k, iterations):
     plt.show()
 
 if __name__ == "__main__":
-    plot_coalescence_time(10, 3, 100)
+    plot_coalescence_time(100, 2, 1000)

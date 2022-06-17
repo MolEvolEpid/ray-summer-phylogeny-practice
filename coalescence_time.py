@@ -45,22 +45,22 @@ def plot_coalescence_probability_overlay(N, k, replicates):
     y = [coalescence_probability(N, k, t) for t in x]
 
     # Make two X axes to plot both on top of each other
-    fig, hist_ax = plt.subplots()
-    plot_ax = hist_ax.twinx()
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
 
     # Plot the actual data
-    hist_ax.hist(times, color=color1)
-    plot_ax.plot(x, y, color=color2)
+    ax1.hist(times, color=color1)
+    ax2.plot(x, y, color=color2)
    
     # Styles (what a mess!)
     ## Color and name the histogram y-axis (and the x-axis because I did it weird)
-    hist_ax.set_ylabel("Coalesced generations (out of " + str(replicates) + ")")
-    hist_ax.yaxis.label.set_color(color1)
-    hist_ax.set_xlabel("Time (t)")
+    ax1.set_ylabel("Coalesced generations (out of " + str(replicates) + ")")
+    ax1.yaxis.label.set_color(color1)
+    ax1.set_xlabel("Time (t)")
 
     ## Color and name the probability plot y-axis
-    plot_ax.set_ylabel("Probability of coalescence")
-    plot_ax.yaxis.label.set_color(color2)
+    ax2.set_ylabel("Probability of coalescence")
+    ax2.yaxis.label.set_color(color2)
     
     ## Give the graph a title with the run parameters
     info = "N = " + str(N) + ", k = " + str(k) + ", replicates = " + str(replicates)
@@ -76,8 +76,11 @@ def plot_coalescence_probability_overlay(N, k, replicates):
     plt.show()
 
 def test_things():
-    for N in np.arange(100, 1100, 100):
-        for k in np.arange(2, 11, 1):
+    #N_range = np.concatenate((np.arange(100, 1000, 100), np.arange(1000, 11000, 1000)))
+    N_range = np.arange(1000, 11000, 1000)
+    k_range = np.arange(2, 11, 1)
+    for N in N_range:
+        for k in k_range:
             plot_coalescence_probability_overlay(N, k, 1000)
 
 if __name__ == "__main__":

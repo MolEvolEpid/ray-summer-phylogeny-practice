@@ -40,17 +40,19 @@ def plot_coalescence_time(N, k, iterations):
     showing the coalescence time of many iterations of the coalescence model.
     """
     times = [time_until_coalescence(N, k) for i in range(iterations)]
-    scaling_factor = (max(times) / N)
-    x = np.linspace(0, N, 1000)
-    y_scale = (iterations / N) * k # why on earth would this be necessary?
-    y = [y_scale * likelihood(N, k, t) for t in x] # TODO: Why do I have another coefficient here?!
+    x_scale = max(times) / N
+    x = np.linspace(0, x_scale * N, 1000)
+    y = [likelihood(N, k, t) for t in x] 
 
-    plt.plot(x, y) # This plot almost seems like it's wrong. or maybe it should go to t = 800 or something?
+    plt.subplot(1, 2, 1)
     plt.hist(times)
+    plt.subplot(1, 2, 2)
+    plt.plot(x, y)
+    plt.ylim(bottom=0)
 
     plt.show()
 
 if __name__ == "__main__":
     plot_coalescence_time(1000, 20, 1000)
-    plot_coalescence_time(10000, 20, 1000)
-    plot_coalescence_time(10, 2, 1000)
+    plot_coalescence_time(1000, 20, 100)
+    plot_coalescence_time(100, 2, 1000)

@@ -19,40 +19,40 @@ def time_until_coalescence(N, k):
     time = 0
     while len(nodes) == k:
         time += 1
+        # TODO jsut check if there are duplicates and return
         nodes = set([random.randint(1, N-1) for i in nodes])
     return time
 
-def likelihood(N, k, t):
+def coalescence_probability(N, k, t):
     """
-    Calculate the likelihood that a coalescence occurs at time t given N and k.
+    Calculate the probability that a coalescence occurs at time t given N and k, 
+    and no earlier or later.
+    """
+    num_possible_pairs = (k * (k - 1)) / 2
+    prob = math.comb(k, 2) / N
+    assert prob <= 1, "Coalescence probability should not be above 1"
+    return num_possible_pairs * math.pow(1 - prob, t-1) * prob
 
-    For a coalescence to first occur at time t, the likelihood must include
-    the probability of t-1 generations without coalescence and 1 generation
-    that coalesces.
+def plot_coalescence_probability_overlay(N, k, replicates):
     """
-    possible_pairs = (k * (k - 1)) / 2
-    coalescence_prob = math.comb(k, 2) / N
-    return possible_pairs * math.pow(1 - coalescence_prob, t-1) * coalescence_prob
+    Overlay the coalescence probability function with a histogram
+    showing the observed times for many replicates.
+    """
+    # Generate the data
+    times = [time_until_coalescence(N, k) for i in range(replicates)]
+    x = np.linspace(0, max(times), 1000) # todo: do I need to copy it?
+    y = [coalescence_probability(N, k, t) for t in x]
 
-def plot_coalescence_time(N, k, iterations):
-    """
-    Overlay the likelihood function for coalescence time on a histogram
-    showing the coalescence time of many iterations of the coalescence model.
-    """
-    times = [time_until_coalescence(N, k) for i in range(iterations)]
-    x_scale = max(times) / N
-    x = np.linspace(0, x_scale * N, 1000)
-    y = [likelihood(N, k, t) for t in x] 
+    # Make two X axes to plot both on top of each other
+    fig, hist_ax = plt.subplots()
+    plot_ax = hist_ax.twinx()
 
-    plt.subplot(1, 2, 1)
-    plt.hist(times)
-    plt.subplot(1, 2, 2)
-    plt.plot(x, y)
+    # Plot the actual data
+    hist_ax.hist(times)
+    plot_ax.plot(x, y, color="black")
     plt.ylim(bottom=0)
 
     plt.show()
 
 if __name__ == "__main__":
-    plot_coalescence_time(1000, 20, 1000)
-    plot_coalescence_time(1000, 20, 100)
-    plot_coalescence_time(100, 2, 1000)
+    plot_coalescence_probability_overlay(1000, 20, 1000)

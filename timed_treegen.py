@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import math
 import random
 from ete3 import TreeNode
@@ -32,43 +31,48 @@ def step(N, k, nodes):
     # return the new pile of nodes, as well as
     # how many nodes are now in the sample (k)
     nodes.append(parent)
-    return nodes, len(nodes)
+    return next_time, nodes
 
 
 def run_constant(k, N):
     """
     Run a coalescent model with a constant population.
-        n(t) = N
+        N(t) = N
     """
     nodes = generate_nodes(k)
     while k > 1:
-        nodes, k = step(N, k, nodes)
+        nodes, next_time = step(N, k, nodes)
+        k = len(nodes)
     return nodes[0]
 
 
 def run_linear(k, alpha, beta):
     """
     Run a coalescent model with a linearly increasing population.
-        n(t) = α + βt
+        N(t) = α + βt
     """
     nodes = generate_nodes(k)
     t = 0
     while k > 1:
         N = round(alpha + (beta * t))
-        nodes, k = step(N, k, nodes)
-        t += 1
+        print(N, k)
+        next_time, nodes= step(N, k, nodes)
+        k = len(nodes)
+        t += next_time
     return nodes[0]
 
 
-def run_exponential(k, n0, r):
+def run_exponential(k, N0, r):
     """
     Run a coalescent model with an exponentially increasting population.
-        n(t) = n0 * e^rt
+        N(t) = N0 * e^rt
     """
     nodes = generate_nodes(k)
     t = 0
     while k > 1:
-        N = round(n0 * math.pow(math.e, r * t))
-        nodes, k = step(N, k, nodes)
-        t += 1
+        N = round(N0 * math.pow(math.e, r * t))
+        print(N, k)
+        next_time, nodes = step(N, k, nodes)
+        k = len(nodes)
+        t += next_time
     return nodes[0]

@@ -13,13 +13,16 @@ def time_until_coalescence(N, k):
     Run a neutral coalescent model until a coalescence occurs,
     returning the total number of generations.
     """
-    nodes = range(k)
     time = 0
-    while len(nodes) == k:
+    while True: 
         time += 1
-        # TODO jsut check if there are duplicates and return
-        nodes = set([random.randint(1, N-1) for i in nodes])
-    return time
+        parents = set()
+        for node in range(k):
+            choice = random.randint(1, N-1)
+            if choice in parents: # sets have good __ in __ lookup times
+                return time
+            else:
+                parents.add(choice)
 
 def coalescence_probability(N, k, t):
     """
@@ -85,4 +88,5 @@ def test_things():
 
 if __name__ == "__main__":
     #plot_coalescence_probability_overlay(1000, 20, 1000)
-    test_things()
+    #test_things()
+    pass

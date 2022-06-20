@@ -54,7 +54,7 @@ def run_linear(k, alpha, beta):
     nodes = generate_nodes(k)
     t = 0
     while k > 1:
-        N = alpha + (beta * t)
+        N = round(alpha + (beta * t))
         nodes, k = step(N, k, nodes)
         t += 1
     return nodes[0]
@@ -68,7 +68,7 @@ def run_exponential(k, n0, r):
     nodes = generate_nodes(k)
     t = 0
     while k > 1:
-        N = n0 * math.pow(math.e, r * t)
+        N = round(n0 * math.pow(math.e, r * t))
         nodes, k = step(N, k, nodes)
         t += 1
     return nodes[0]

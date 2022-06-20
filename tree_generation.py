@@ -8,6 +8,7 @@ class TreeGenerator:
 			host = random.choice(["A", "B"])
 			node = TreeNode(name=host)
 			node.host = host
+			node.time = 1
 			self.nodes.append(node)
 
 	def find_weighted_partner(self, node):

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# timetree.py
+# time_tree.py
 #
-# TimeTree is an ete3 Tree wit timestamp[s associated with the branch lengths.
+# TimeTree is an ete3 Tree wit timestamps associated with the branch lengths.
 # The most recent node is at time 0, and those closer to the root of the tree
 # have larger times. 
 

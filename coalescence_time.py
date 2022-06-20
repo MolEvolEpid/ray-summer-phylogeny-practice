@@ -78,13 +78,6 @@ def plot_coalescence_probability_overlay(N, k, replicates):
     # Print it! Yay?
     plt.show()
 
-def test_things():
-    #N_range = np.concatenate((np.arange(100, 1000, 100), np.arange(1000, 11000, 1000)))
-    N_range = np.arange(1000, 11000, 1000)
-    k_range = np.arange(2, 11, 1)
-    for N in N_range:
-        for k in k_range:
-            plot_coalescence_probability_overlay(N, k, 1000)
 
 if __name__ == "__main__":
     #plot_coalescence_probability_overlay(1000, 20, 1000)

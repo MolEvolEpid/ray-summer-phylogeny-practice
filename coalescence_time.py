@@ -42,10 +42,12 @@ def histogram_data(N, k, replicates):
     times = [time_until_coalescence(N, k) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
     y = [coalescence_probability(N, k, t) for t in x]
+    
+    labels = {"N": N, "k": k, "replicates": replicates}
 
-    return times, x, y
+    return times, x, y, labels
 
-def plot_coalescence_probability_overlay(times, x, y):
+def plot_coalescence_probability_overlay(times, x, y, labels):
     """
     Overlay the coalescence probability function with a histogram
     showing the observed times for many replicates.
@@ -56,22 +58,25 @@ def plot_coalescence_probability_overlay(times, x, y):
 
     # Plot the data
     ## Probability curve
-    ax.plot(x, y, color=color2)
+    ax.plot(x, y, color=color2, label="Theoretical probability curve")
     
     ## Create a histogram, scaling so the total area underneath is 1
-    hist, bin_edges = np.histogram(times, bins=20)
+    hist, bin_edges = np.histogram(times, bins=30)
     hist_neg_cumulative = [np.sum(hist[i:]) for i in range(len(hist))]
     hist_sum = sum(hist_neg_cumulative)
     hist_neg_cumulative = [term / hist_sum for term in hist_neg_cumulative]
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
-    ax.step(bin_centers, hist_neg_cumulative)
+    ax.step(bin_centers, hist_neg_cumulative, color=color1, label="Simulated coalescence timing")
    
     # Styles
     ax.set_ylabel("Probability of coalescence (%)")
     ax.set_xlabel("Time (t)")
+    ax.legend()
 
     ## Give the graph a title with the run parameters
-    info = "N = " + str(N) + ", k = " + str(k) + ", replicates = " + str(replicates)
+    info = "N = " + str(labels["N"]) \
+           + ", k = " + str(labels["k"]) \
+           + ", replicates = " + str(labels["replicates"])
     ax.set_title("Coalescence time for " + info)
     
     ## Padding around the graph
@@ -81,5 +86,6 @@ def plot_coalescence_probability_overlay(times, x, y):
     plt.show()
 
 if __name__ == "__main__":
-    plot_coalescence_probability_overlay(1000, 20, 1000)
+    times, x, y, labels = histogram_data(1000, 20, 1000)
+    plot_coalescence_probability_overlay(times, x, y, labels)
     #test_things()

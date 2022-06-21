@@ -13,7 +13,8 @@ def probability_overlay(times, x, y, labels):
 
     # Plot the data
     ax.plot(x, y, color=color2, label="Theoretical probability curve")
-    ax.hist(times, bins=range(0, max(times)), density=True, color=color1, label="Simulated coalescence timing")
+    ax.hist(times, bins=range(0, max(times)), density=True, color=color1, \
+            label="Simulated coalescence timing")
 
     # Styles
     ax.set_ylabel("Probability of coalescence (%)")
@@ -21,11 +22,13 @@ def probability_overlay(times, x, y, labels):
     ax.legend()
 
     ## Give the graph a title with the run parameters
-    info = "N = " + labels["N"] + \
-           ", k = " + labels["k"] + \
-           ", replicates = " + labels["replicates"]
-    ax.set_title("Coalescence time for " + info)
-    
+    info = "N = " + labels["N"] + ", k = " + labels["k"]
+    if labels["type"] == "Exponential":
+        info += ", r = " + labels["r"]
+    if labels["type"] == "Linear":
+        info += ", b = " + labels["b"]
+    ax.set_title(labels["type"] + " population growth with " + info)
+
     ## Padding around the graph
     fig.tight_layout(pad=2)
     

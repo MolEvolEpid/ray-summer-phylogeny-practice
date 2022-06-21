@@ -24,14 +24,14 @@ def con_time_until_next(k, N):
             else:
                 parents.add(p)
 
-def lin_time_until_next(k, N0, beta):
+def lin_time_until_next(k, N0, b):
     """
     The time until the next coalescence in a linear population model
     """
     t = 0
     while True:
         t += 1
-        N = round(N0 - (beta * t))
+        N = round(N0 - (b * t))
         parents = set()
         for i in range(k):
             p = random.randint(0, N-1)
@@ -94,18 +94,18 @@ def con_histogram(k, N, replicates):
     y = [con_probability(k, N, t) for t in x]
     labels = {"type": "Constant", "N": str(N), "k": str(k), "replicates": str(replicates)}
 
-    plot_coalescence(times, x, y, labels)
+    probability_overlay(times, x, y, labels)
 
-def lin_histogram(k, N0, beta, replicates):
+def lin_histogram(k, N0, b, replicates):
     """
     Histogram of next coalescence time with linear population
     """
-    times = [lin_time_until_next(k, N0, beta) for i in range(replicates)]
+    times = [lin_time_until_next(k, N0, b) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
-    y = [lin_probability(k, N0, beta, t) for t in x]
-    labels = {"type": "Linear", "N": str(N0), "k": str(k), "replicates": str(replicates)}
+    y = [lin_probability(k, N0, b, t) for t in x]
+    labels = {"type": "Linear", "N": str(N0), "k": str(k), "b": str(b), "replicates": str(replicates)}
 
-    plot_coalescence(times, x, y, labels)
+    probability_overlay(times, x, y, labels)
 
 def exp_histogram(k, N0, r, replicates):
     """
@@ -114,9 +114,9 @@ def exp_histogram(k, N0, r, replicates):
     times = [exp_time_until_next(k, N0, r) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
     y = [exp_probability(k, N0, r, t) for t in x]
-    labels = {"type": "Exponential", "N": str(N0), "k": str(k), "replicates": str(replicates)}
+    labels = {"type": "Exponential", "N": str(N0), "k": str(k), "r": str(r), "replicates": str(replicates)}
 
-    plot_coalescence(times, x, y, labels)
+    probability_overlay(times, x, y, labels)
 
 #
 # Some simple scripts to test these things
@@ -127,7 +127,7 @@ def con_test():
         con_histogram(k, 1000, 1000)
 
 def lin_test():
-    for b in np.arange(1, 3, 1):
+    for b in np.arange(1, 3, 1): # linear seems VERY picky about what parameters I use. ugh!
         for k in np.arange(2, 32, 5):
             lin_histogram(k, 100000, b, 1000)
 

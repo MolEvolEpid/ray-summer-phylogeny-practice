@@ -34,52 +34,52 @@ def coalescence_probability(N, k, t):
     assert prob <= 1, "Coalescence probability should not be above 1"
     return math.pow(1 - prob, t-1) * prob #TODO: Was I not supposed to multiply by num_possible_pairs?
 
-def plot_coalescence_probability_overlay(N, k, replicates):
+def histogram_data(N, k, replicates):
+    """
+    Generate the necessary data to create a histogram
+    with the given N, k, and number of replicates.
+    """
+    times = [time_until_coalescence(N, k) for i in range(replicates)]
+    x = np.linspace(0, max(times), 1000)
+    y = [coalescence_probability(N, k, t) for t in x]
+
+    return times, x, y
+
+def plot_coalescence_probability_overlay(times, x, y):
     """
     Overlay the coalescence probability function with a histogram
     showing the observed times for many replicates.
     """
     color1 = "steelblue"
     color2 = "navy"
+    fig, ax = plt.subplots()
 
-    # Generate the data
-    times = [time_until_coalescence(N, k) for i in range(replicates)]
-    x = np.linspace(0, max(times), 1000) # todo: do I need to copy it?
-    y = [coalescence_probability(N, k, t) for t in x]
-
-    # Make two X axes to plot both on top of each other
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
-
-    # Plot the actual data
-    ax1.hist(times, color=color1)
-    ax2.plot(x, y, color=color2)
-   
-    # Styles (what a mess!)
-    ## Color and name the histogram y-axis (and the x-axis because I did it weird)
-    ax1.set_ylabel("Coalesced generations (out of " + str(replicates) + ")")
-    ax1.yaxis.label.set_color(color1)
-    ax1.set_xlabel("Time (t)")
-
-    ## Color and name the probability plot y-axis
-    ax2.set_ylabel("Probability of coalescence")
-    ax2.yaxis.label.set_color(color2)
+    # Plot the data
+    ## Probability curve
+    ax.plot(x, y, color=color2)
     
+    ## Create a histogram, scaling so the total area underneath is 1
+    hist, bin_edges = np.histogram(times, bins=20)
+    hist_neg_cumulative = [np.sum(hist[i:]) for i in range(len(hist))]
+    hist_sum = sum(hist_neg_cumulative)
+    hist_neg_cumulative = [term / hist_sum for term in hist_neg_cumulative]
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
+    ax.step(bin_centers, hist_neg_cumulative)
+   
+    # Styles
+    ax.set_ylabel("Probability of coalescence (%)")
+    ax.set_xlabel("Time (t)")
+
     ## Give the graph a title with the run parameters
     info = "N = " + str(N) + ", k = " + str(k) + ", replicates = " + str(replicates)
-    plt.title("Coalescence time for " + info)
-
-    ## Make sure that zero lines up for both plots
-    plt.ylim(bottom=0)
-
+    ax.set_title("Coalescence time for " + info)
+    
     ## Padding around the graph
     fig.tight_layout(pad=2)
     
     # Print it! Yay?
     plt.show()
 
-
 if __name__ == "__main__":
-    #plot_coalescence_probability_overlay(1000, 20, 1000)
+    plot_coalescence_probability_overlay(1000, 20, 1000)
     #test_things()
-    pass

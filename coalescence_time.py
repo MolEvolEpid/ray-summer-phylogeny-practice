@@ -14,25 +14,23 @@ def time_until_coalescence(N, k):
     returning the total number of generations.
     """
     time = 0
-    while True: 
+    while True:
         time += 1
         parents = set()
         for node in range(k):
             choice = random.randint(1, N-1)
-            if choice in parents: # sets have good __ in __ lookup times
+            if choice in parents:
                 return time
             else:
                 parents.add(choice)
 
 def coalescence_probability(N, k, t):
     """
-    Calculate the probability that a coalescence occurs at time t given N and k, 
+    Calculate the probability that a coalescence occurs at time t given N and k,
     and no earlier or later.
     """
-    num_possible_pairs = (k * (k - 1)) / 2
-    prob = math.comb(k, 2) / N
-    assert prob <= 1, "Coalescence probability should not be above 1"
-    return math.pow(1 - prob, t-1) * prob #TODO: Was I not supposed to multiply by num_possible_pairs?
+    lmd = (k * (k - 1)) / (2 * N)
+    return lmd * math.exp(-lmd * t)
 
 def histogram_data(N, k, replicates):
     """
@@ -43,7 +41,7 @@ def histogram_data(N, k, replicates):
     x = np.linspace(0, max(times), 1000)
     y = [coalescence_probability(N, k, t) for t in x]
     
-    labels = {"N": N, "k": k, "replicates": replicates}
+    labels = {"N": str(N), "k": str(k), "replicates": str(replicates)}
 
     return times, x, y, labels
 
@@ -59,24 +57,24 @@ def plot_coalescence_probability_overlay(times, x, y, labels):
     # Plot the data
     ## Probability curve
     ax.plot(x, y, color=color2, label="Theoretical probability curve")
-    
+
     ## Create a histogram, scaling so the total area underneath is 1
-    hist, bin_edges = np.histogram(times, bins=30)
+    hist, bin_edges = np.histogram(times, bins=range(0, max(times)))
     hist_neg_cumulative = [np.sum(hist[i:]) for i in range(len(hist))]
     hist_sum = sum(hist_neg_cumulative)
     hist_neg_cumulative = [term / hist_sum for term in hist_neg_cumulative]
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
     ax.step(bin_centers, hist_neg_cumulative, color=color1, label="Simulated coalescence timing")
-   
+
     # Styles
     ax.set_ylabel("Probability of coalescence (%)")
     ax.set_xlabel("Time (t)")
     ax.legend()
 
     ## Give the graph a title with the run parameters
-    info = "N = " + str(labels["N"]) \
-           + ", k = " + str(labels["k"]) \
-           + ", replicates = " + str(labels["replicates"])
+    info = "N = " + labels["N"] + \
+           ", k = " + labels["k"] + \
+           ", replicates = " + labels["replicates"]
     ax.set_title("Coalescence time for " + info)
     
     ## Padding around the graph
@@ -85,7 +83,15 @@ def plot_coalescence_probability_overlay(times, x, y, labels):
     # Print it! Yay?
     plt.show()
 
+def test_things():
+    N_range = np.arange(1000, 11000, 100)
+    k_range = np.arange(2, 11, 1)
+    for N in N_range:
+        for k in k_range:
+            times, x, y, labels = histogram_data(N, k, 1000)
+            plot_coalescence_probability_overlay(times, x, y, labels)
+
 if __name__ == "__main__":
+    #test_things()
     times, x, y, labels = histogram_data(1000, 20, 1000)
     plot_coalescence_probability_overlay(times, x, y, labels)
-    #test_things()

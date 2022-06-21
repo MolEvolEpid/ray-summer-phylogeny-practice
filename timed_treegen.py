@@ -3,8 +3,7 @@
 import math
 import random
 import numpy as np
-from coalescence_time import coalescence_probability, \
-        plot_coalescence_probability_overlay as plot_coalescence
+from plot_coalescence_time import probability_overlay
 
 #
 # Simulate the time until a coalescence event with each population model
@@ -16,6 +15,7 @@ def con_time_until_next(k, N):
     """
     t = 0
     while True:
+        t += 1
         parents = set()
         for i in range(k):
             p = random.randint(0, N-1)
@@ -61,13 +61,12 @@ def exp_time_until_next(k, N0, r):
 # for each population model
 #
 
-# TODO: Should I move the constant one in here? Right now it lives in coalescent_probability
-
 def con_probability(k, N, z):
     """
     The proabaility of a coalescence at time z with constant population
     """
-    return coalescence_probability(N, k, z)
+    lmd = k*(k - 1)/(2*N)
+    return lmd * math.exp(-lmd*z)
 
 def lin_probability(k, N0, b, z):
     """
@@ -92,8 +91,8 @@ def con_histogram(k, N, replicates):
     """
     times = [con_time_until_next(k, N) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
-    y = [con_probability(k, N0, t) for t in x]
-    labels = {"N": str(N), "k": str(k), "replicates": str(replicates)}
+    y = [con_probability(k, N, t) for t in x]
+    labels = {"type": "Constant", "N": str(N), "k": str(k), "replicates": str(replicates)}
 
     plot_coalescence(times, x, y, labels)
 
@@ -104,7 +103,7 @@ def lin_histogram(k, N0, beta, replicates):
     times = [lin_time_until_next(k, N0, beta) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
     y = [lin_probability(k, N0, beta, t) for t in x]
-    labels = {"N": str(N0), "k": str(k), "replicates": str(replicates)}
+    labels = {"type": "Linear", "N": str(N0), "k": str(k), "replicates": str(replicates)}
 
     plot_coalescence(times, x, y, labels)
 
@@ -115,9 +114,28 @@ def exp_histogram(k, N0, r, replicates):
     times = [exp_time_until_next(k, N0, r) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
     y = [exp_probability(k, N0, r, t) for t in x]
-    labels = {"N": str(N0), "k": str(k), "replicates": str(replicates)}
+    labels = {"type": "Exponential", "N": str(N0), "k": str(k), "replicates": str(replicates)}
 
     plot_coalescence(times, x, y, labels)
+
+#
+# Some simple scripts to test these things
+#
+
+def con_test():
+    for k in np.arange(2, 32, 5):
+        con_histogram(k, 1000, 1000)
+
+def lin_test():
+    for b in np.arange(1, 3, 1):
+        for k in np.arange(2, 32, 5):
+            lin_histogram(k, 100000, b, 1000)
+
+def exp_test():
+    for k in np.linspace(2, 32, 5):
+        for r in np.linspace(0, 1, 15):
+            exp_histogram(k, 1000, r, 1000)
+
 
 if __name__ == "__main__":
     exp_histogram(5, 1000, 0.1, 1000)

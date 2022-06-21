@@ -27,7 +27,7 @@ def probability_overlay(times, x, y, labels):
         info += ", r = " + labels["r"]
     if labels["type"] == "Linear":
         info += ", b = " + labels["b"]
-    ax.set_title(labels["type"] + " population growth with " + info)
+    ax.set_title(labels["type"] + " coalescence time with " + info)
 
     ## Padding around the graph
     fig.tight_layout(pad=2)

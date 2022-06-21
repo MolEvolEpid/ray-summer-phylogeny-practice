@@ -2,72 +2,122 @@
 
 import math
 import random
-from ete3 import TreeNode
-from coalescence_time import time_until_coalescence
+import numpy as np
+from coalescence_time import coalescence_probability, \
+        plot_coalescence_probability_overlay as plot_coalescence
 
-def generate_nodes(k):
-    return [TreeNode(name=str(i)) for i in range(k)]
+#
+# Simulate the time until a coalescence event with each population model
+#
 
-def step(N, k, nodes):
+def con_time_until_next(k, N):
     """
-    Based on the current N and k, find the time that the 
-    next coalescence should occur and randomly cause
-    two lineages to coalesce at that point.
+    The time until the next coalescence in a constant population model
     """
-    # shuffle the available nodes and take two to pair
-    random.shuffle(nodes)
-    n1 = nodes.pop()
-    n2 = nodes.pop()
-
-    # give them a common parent and set their times
-    next_time = time_until_coalescence(N, k)
-    parent = TreeNode()
-    for node in [n1, n2]:
-        node.dist = next_time
-        parent.add_child(node)
-
-    # return the new pile of nodes, as well as
-    # how many nodes are now in the sample (k)
-    nodes.append(parent)
-    return nodes, next_time
-
-def run_constant(k, N):
-    """
-    Run a coalescent model with a constant population.
-        N(t) = N
-    """
-    nodes = generate_nodes(k)
-    while k > 1:
-        nodes, next_time = step(N, k, nodes)
-        k = len(nodes)
-    return nodes[0]
-
-def run_linear(k, alpha, beta):
-    """
-    Run a coalescent model with a linearly increasing population.
-        N(t) = α - βt
-    """
-    nodes = generate_nodes(k)
     t = 0
-    while k > 1:
-        N = round(alpha - (beta * t)) # TODO: random freaks out if N <= 1 
-        print(t, N, k)
-        nodes, next_time = step(N, k, nodes)
-        k = len(nodes)
-        t += next_time
-    return nodes[0]
+    while True:
+        parents = set()
+        for i in range(k):
+            p = random.randint(0, N-1)
+            if p in parents:
+                return t
+            else:
+                parents.add(p)
 
-def run_exponential(k, N0, r):
+def lin_time_until_next(k, N0, beta):
     """
-    Run a coalescent model with an exponentially increasting population.
-        N(t) = N0 * e ^ -rt
+    The time until the next coalescence in a linear population model
     """
-    nodes = generate_nodes(k)
     t = 0
-    while k > 1:
-        N = round(N0 * math.pow(math.e, -1 * r * t)) # Random can't handle if N == 1
-        print(t, N, k)
-        nodes, next_time = step(N, k, nodes)
-        k = len(nodes)
-        t += next_time
-    return nodes[0]
+    while True:
+        t += 1
+        N = round(N0 - (beta * t))
+        parents = set()
+        for i in range(k):
+            p = random.randint(0, N-1)
+            if p in parents:
+                return t
+            else:
+                parents.add(p)
+
+def exp_time_until_next(k, N0, r):
+    """
+    The time until the next coalescence in an exponential population model
+    """
+    t = 0
+    while True:
+        t += 1
+        N = round(N0 * math.exp(-r * t))
+        parents = set()
+        for i in range(k):
+            p = random.randint(0, N-1)
+            if p in parents:
+                return t
+            else:
+                parents.add(p)
+
+#
+# Functions for the probability of coalescence by time t
+# for each population model
+#
+
+# TODO: Should I move the constant one in here? Right now it lives in coalescent_probability
+
+def con_probability(k, N, z):
+    """
+    The proabaility of a coalescence at time z with constant population
+    """
+    return coalescence_probability(N, k, z)
+
+def lin_probability(k, N0, b, z):
+    """
+    The probability of a coalescence at time z with linear population
+    """
+    return (k*(k-1)/2) / (N0-b*z) * (N0 / (N0-b*z))**(-k*(k-1)/(2*b))
+
+def exp_probability(k, N0, r, z):
+    """
+    The probability of a coalescence at time z with exponential population
+    """
+    return k*(k-1)/2 * math.exp(r*z) / N0 * math.exp(-(k*(k-1)/2) * (math.exp(r*z) -1) / (r*N0))
+
+#
+# Return data for a histogram of the probability of coalescence at over time
+# for each population model
+#
+
+def con_histogram(k, N, replicates):
+    """
+    Histogram of next coalescence time with constant population
+    """
+    times = [con_time_until_next(k, N) for i in range(replicates)]
+    x = np.linspace(0, max(times), 1000)
+    y = [con_probability(k, N0, t) for t in x]
+    labels = {"N": str(N), "k": str(k), "replicates": str(replicates)}
+
+    plot_coalescence(times, x, y, labels)
+
+def lin_histogram(k, N0, beta, replicates):
+    """
+    Histogram of next coalescence time with linear population
+    """
+    times = [lin_time_until_next(k, N0, beta) for i in range(replicates)]
+    x = np.linspace(0, max(times), 1000)
+    y = [lin_probability(k, N0, beta, t) for t in x]
+    labels = {"N": str(N0), "k": str(k), "replicates": str(replicates)}
+
+    plot_coalescence(times, x, y, labels)
+
+def exp_histogram(k, N0, r, replicates):
+    """
+    Histogram of next coalescence time with exponential population
+    """
+    times = [exp_time_until_next(k, N0, r) for i in range(replicates)]
+    x = np.linspace(0, max(times), 1000)
+    y = [exp_probability(k, N0, r, t) for t in x]
+    labels = {"N": str(N0), "k": str(k), "replicates": str(replicates)}
+
+    plot_coalescence(times, x, y, labels)
+
+if __name__ == "__main__":
+    exp_histogram(5, 1000, 0.1, 1000)

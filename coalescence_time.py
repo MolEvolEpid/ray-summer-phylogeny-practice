@@ -55,16 +55,8 @@ def plot_coalescence_probability_overlay(times, x, y, labels):
     fig, ax = plt.subplots()
 
     # Plot the data
-    ## Probability curve
     ax.plot(x, y, color=color2, label="Theoretical probability curve")
-
-    ## Create a histogram, scaling so the total area underneath is 1
-    hist, bin_edges = np.histogram(times, bins=range(0, max(times)))
-    hist_neg_cumulative = [np.sum(hist[i:]) for i in range(len(hist))]
-    hist_sum = sum(hist_neg_cumulative)
-    hist_neg_cumulative = [term / hist_sum for term in hist_neg_cumulative]
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.
-    ax.step(bin_centers, hist_neg_cumulative, color=color1, label="Simulated coalescence timing")
+    ax.hist(times, bins=range(0, max(times)), density=True, color=color1, label="Simulated coalescence timing")
 
     # Styles
     ax.set_ylabel("Probability of coalescence (%)")

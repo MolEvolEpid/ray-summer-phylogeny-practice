@@ -45,10 +45,11 @@ def segment_log_likelihood(tree, start, end):
     Return the log likelihood that a certain segment of the tree would coalesce the way
     it did, assuming an arbitrary population size of 1000.
     """
-    k = len(children_at_time(tree, start))
     # TODO: when there are multiple start times this will be innaccurate
+    k = len(children_at_time(tree, start))
     N = 1000
     z = end - start
+    #print(k, N, z)
     return np.log(con_probability(k, N, z))
 
 def tree_log_likelihood(tree):
@@ -63,8 +64,9 @@ def tree_log_likelihood(tree):
     return log_likelihood
 
 if __name__ == "__main__":
-    t = TimeTree("((A:1, B:1):2, C:3);")
-    print(tree_log_likelihood(t))
-    t.show()
+    for tree in ["((A:1, B:1):2, C:3);", "tree_files/test1.nwk", "tree_files/test2.nwk", \
+            "tree_files/test3.nwk", "tree_files/test4.nwk", "tree_files/challenge.nwk",]:
+        ll = tree_log_likelihood(TimeTree(tree))
+        print(f"log likelihood for {tree} is {ll}")
 
 

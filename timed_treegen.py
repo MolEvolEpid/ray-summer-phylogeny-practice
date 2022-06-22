@@ -3,7 +3,7 @@
 import math
 import random
 import numpy as np
-from plot_coalescence_time import probability_overlay
+from plot_coalescence_time import probability_overlay, side_by_side
 
 #
 # Simulate the time until a coalescence event with each population model
@@ -94,7 +94,7 @@ def con_histogram(k, N, replicates):
     y = [con_probability(k, N, t) for t in x]
     labels = {"type": "Constant", "N": str(N), "k": str(k), "replicates": str(replicates)}
 
-    probability_overlay(times, x, y, labels)
+    return times, x, y, labels
 
 def lin_histogram(k, N0, b, replicates):
     """
@@ -104,8 +104,8 @@ def lin_histogram(k, N0, b, replicates):
     x = np.linspace(0, max(times), 1000)
     y = [lin_probability(k, N0, b, t) for t in x]
     labels = {"type": "Linear", "N": str(N0), "k": str(k), "b": str(b), "replicates": str(replicates)}
-
-    probability_overlay(times, x, y, labels)
+    
+    return times, x, y, labels
 
 def exp_histogram(k, N0, r, replicates):
     """
@@ -116,26 +116,50 @@ def exp_histogram(k, N0, r, replicates):
     y = [exp_probability(k, N0, r, t) for t in x]
     labels = {"type": "Exponential", "N": str(N0), "k": str(k), "r": str(r), "replicates": str(replicates)}
 
-    probability_overlay(times, x, y, labels)
+    return times, x, y, labels
 
 #
-# Some simple scripts to test these things
+# Plot a 2x2 grid of a certain histogram. You could also find a way
+# to mix the types, but I'm not gonna handle all that.
 #
 
-def con_test():
-    for k in np.arange(2, 32, 5):
-        con_histogram(k, 1000, 1000)
+def con_multi_histogram(k_range, N_range, replicates):
+    """
+    Plot four different constant histograms as subplots so
+    they can be compared easily
+    """
+    runs = []
+    for (k, N) in zip(k_range, N_range):
+        times, x, y, labels = con_histogram(k, N, replicates)
+        runs.append({"times": times, "x": x, "y": y, "labels": labels})
+    side_by_side(runs)
 
-def lin_test():
-    for b in np.arange(1, 3, 1): # linear seems VERY picky about what parameters I use. ugh!
-        for k in np.arange(2, 32, 5):
-            lin_histogram(k, 100000, b, 1000)
+def lin_multi_histogram(k_range, N0_range, b_range, replicates):
+    """
+    Plot four different linear histograms as subplots so
+    they can be compared easily
+    """
+    runs = []
+    for (k, N0, b) in zip(k_range, N0_range, b_range):
+        times, x, y, labels = lin_histogram(k, N0, b, replicates)
+        runs.append({"times": times, "x": x, "y": y, "labels": labels})
+    side_by_side(runs)
 
-def exp_test():
-    for k in np.linspace(2, 32, 5):
-        for r in np.linspace(0, 1, 15):
-            exp_histogram(k, 1000, r, 1000)
+def exp_multi_histogram(k_range, N0_range, r_range, replicates):
+    """
+    Plot four different exponential histograms as subplots so
+    they can be compared easily
+    """
+    runs = []
+    for (k, N0, r) in zip(k_range, N0_range, r_range):
+        times, x, y, labels = exp_histogram(k, N0, r, replicates)
+        runs.append({"times": times, "x": x, "y": y, "labels": labels})
+    side_by_side(runs)
 
 
 if __name__ == "__main__":
-    exp_histogram(5, 1000, 0.1, 1000)
+    con_multi_histogram([2, 4, 8, 16], [1000, 1000, 1000, 1000], 1000)
+    lin_multi_histogram([2, 4, 8, 16], [1000, 1000, 1000, 1000], [1, 1, 1, 1], 1000)
+    lin_multi_histogram([8, 8, 8, 8],  [1000, 1000, 1000, 1000], [0.5, 1, 1.5, 2], 1000)
+    exp_multi_histogram([2, 4, 8, 16], [1000, 1000, 1000, 1000], [0.1, 0.1, 0.1, 0.1], 1000)
+    exp_multi_histogram([8, 8, 8, 8],  [1000, 1000, 1000, 1000], [0.1, 0.2, 0.3, 0.4], 1000)

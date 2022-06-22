@@ -39,7 +39,7 @@ def side_by_side(runs):
     """
     Draw four plots as subplots, in a 2x2 pattern.
 
-    It's sorta complicated, but each runs should be a list of four
+    It's sorta complicated, but runs should be a list of four
     dictionaries, and each one should have these keys
         times
         x

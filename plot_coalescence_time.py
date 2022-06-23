@@ -73,7 +73,7 @@ def side_by_side(runs):
         ax.set_xlim(right=x_max)
 
         ax.set_ylabel("Probability of coalescence (%)")
-        ax.set_ylabel("Time (t)")
+        ax.set_xlabel("Time (t)")
 
         info = "N = " + labels["N"] + ", k = " + labels["k"]
         if labels["type"] == "Exponential":

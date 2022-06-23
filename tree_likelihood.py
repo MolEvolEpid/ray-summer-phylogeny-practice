@@ -23,6 +23,13 @@ def closest_parent_node(tree, time):
             closest_node = node
     return closest_node
 
+def closest_node(tree, time):
+    closest_node = tree
+    for node in tree.traverse():
+        if node.time < closest_node.time and node.time > time:
+            closest_node = node
+    return closest_node
+
 def children_at_time(node, time):
     """
     Return the number of a node's children that exist at a certain time.
@@ -33,51 +40,28 @@ def children_at_time(node, time):
 
 def tree_segments(tree):
     """
-    Divide the tree into a list of segments based on where coalescences occur.
+    Divide a tree into segments based on where k changes
+    (on coalescences or the introduction of new branches)
     """
-    # TODO needs a rework
     max_time = tree.time
     segments = []
     time = 0
     while time < max_time:
-        next_parent = closest_parent_node(tree, time)
-        segments.append((time, next_parent.time))
-        time = next_parent.time
+        next_node = closest_node(tree, time)
+        segments.append((time, next_node.time))
+        time = next_node.time
     return segments
 
 #
-# Log likelihood of a certain segment of a tree
-#
-
-def con_segment_likelihood(tree, N, start, end):
-    """
-    Return the log likelihood that a certain segment of the tree would coalesce the way
-    it did, assuming constant population.
-    """
-    k = len(children_at_time(tree, start))
-    z = end - start
-    return np.log(con_probability(k, N, z))
-
-def lin_segment_likelihood(tree, N, b, start, end):
-    """
-    Return the log likelihood that a certain segment of the tree would coalesce the way
-    it did, assuming linear population.
-    """
-    k = len(children_at_time(tree, start))
-    z = end - start
-    return np.log(lin_probability(k, N, b, z))
-
-def exp_segment_likelihood(tree, N, r, start, end):
-    """
-    Return the log likelihood that a certain segment of the tree would coalesce the way
-    it did, assuming exponential population.
-    """
-    k = len(children_at_time(tree, start))
-    z = end - start
-    return np.log(exp_probability(k, N, r, z))
-#
 # Log likelihood of an entire tree
 #
+
+def count_lineages(tree, start, end):
+    """
+    Return the number of lineages between the given start and end times 
+    """
+    k = len(children_at_time(tree, (start+end)/2))
+    return k
 
 def con_tree_likelihood(tree, N):
     """
@@ -86,8 +70,8 @@ def con_tree_likelihood(tree, N):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        segment_likelihood = con_segment_likelihood(tree, N, start, end)
-        log_likelihood += segment_likelihood
+        k = count_lineages(tree, start, end)
+        log_likelihood += np.log(con_probability(k, N, end-start))
     return log_likelihood
 
 def lin_tree_likelihood(tree, N0, b):
@@ -97,8 +81,8 @@ def lin_tree_likelihood(tree, N0, b):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        segment_likelihood = lin_segment_likelihood(tree, N0, b, start, end)
-        log_likelihood += segment_likelihood
+        k = count_lineages(tree, start, end)
+        log_likelihood += np.log(lin_probability(k, N0, b, end-start))
         N0 -= b*(end-start)
     return log_likelihood
 
@@ -109,9 +93,8 @@ def exp_tree_likelihood(tree, N0, r):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        #N = N0 * np.exp(-r*(end-start))
-        segment_likelihood = exp_segment_likelihood(tree, N0, r, start, end)
-        log_likelihood += segment_likelihood
+        k = count_lineages(tree, start, end)
+        log_likelihood += np.log(exp_probability(k, N0, r, end-start))
         N0 *= np.exp(-r*(end-start))
     return log_likelihood
 

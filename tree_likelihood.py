@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from population_models import con_probability #, lin_probability, exp_probability
+from population_models import con_probability, lin_probability, exp_probability
 from time_tree import TimeTree
+
+#
+# Breaking a tree into parts and finding k
+#
 
 def closest_parent_node(tree, time):
     """
@@ -25,12 +29,13 @@ def children_at_time(node, time):
     """
     if time >= node.time:
         raise Exception("Time must be after the node's own time")
-    return [n for n in node.traverse() if n.time <= time < n.up.time]
+    return [n for n in node.iter_descendants() if n.time <= time < n.up.time]
 
 def tree_segments(tree):
     """
     Divide the tree into a list of segments based on where coalescences occur.
     """
+    # TODO needs a rework
     max_time = tree.time
     segments = []
     time = 0
@@ -40,33 +45,84 @@ def tree_segments(tree):
         time = next_parent.time
     return segments
 
-def segment_log_likelihood(tree, start, end):
+#
+# Log likelihood of a certain segment of a tree
+#
+
+def con_segment_likelihood(tree, N, start, end):
     """
     Return the log likelihood that a certain segment of the tree would coalesce the way
-    it did, assuming an arbitrary population size of 1000.
+    it did, assuming constant population.
     """
-    # TODO: when there are multiple start times this will be innaccurate
     k = len(children_at_time(tree, start))
-    N = 1000
     z = end - start
-    #print(k, N, z)
+    #print(f"({start}, {end}) k={k} N={N} z={z}")
     return np.log(con_probability(k, N, z))
 
-def tree_log_likelihood(tree):
+def lin_segment_likelihood(tree, N, b, start, end):
     """
-    Return the log likelihood that a certain tree exists (normal likelihood 
-    may underflow to zero, which we don't want)
+    Return the log likelihood that a certain segment of the tree would coalesce the way
+    it did, assuming linear population.
     """
-    segments = tree_segments(tree)
+    k = len(children_at_time(tree, start))
+    z = end - start
+    #print(f"({start}, {end}) k={k} N={N} z={z}")
+    return np.log(lin_probability(k, N, b, z))
+
+def exp_segment_likelihood(tree, N, r, start, end):
+    """
+    Return the log likelihood that a certain segment of the tree would coalesce the way
+    it did, assuming exponential population.
+    """
+    k = len(children_at_time(tree, start))
+    z = end - start
+    #print(f"({start}, {end}) k={k} N={N} z={z}")
+    return np.log(exp_probability(k, N, r, z))
+#
+# Log likelihood of an entire tree
+#
+
+def con_tree_likelihood(tree, N):
+    """
+    The log likelihood of a certain tree existing, assuming a
+    constant population of N(t) = N
+    """
     log_likelihood = 0
-    for (start, end) in segments:
-        log_likelihood += segment_log_likelihood(tree, start, end)
+    for (start, end) in tree_segments(tree):
+        segment_likelihood = con_segment_likelihood(tree, N, start, end)
+        log_likelihood += segment_likelihood
+        #print(f"  {segment_likelihood}")
+    return log_likelihood
+
+def lin_tree_likelihood(tree, N0, b):
+    """
+    The log likelihood of a certain tree existing, assuming a
+    linear population of N(t) = N0 - bt
+    """
+    log_likelihood = 0
+    for (start, end) in tree_segments(tree):
+        segment_likelihood = lin_segment_likelihood(tree, N0, b, start, end)
+        log_likelihood += segment_likelihood
+        #print(f"  {segment_likelihood}")
+        N0 -= b*(end-start)
+    return log_likelihood
+
+def exp_tree_likelihood(tree, N0, r):
+    """
+    The log likelihood of a certain tree existing, assuming an
+    exponential population of N(t) = N0 * e^-rt
+    """
+    log_likelihood = 0
+    for (start, end) in tree_segments(tree):
+        #N = N0 * np.exp(-r*(end-start))
+        segment_likelihood = exp_segment_likelihood(tree, N0, r, start, end)
+        log_likelihood += segment_likelihood
+        #print(f"  {segment_likelihood}")
+        N0 *= np.exp(-r*(end-start))
     return log_likelihood
 
 if __name__ == "__main__":
-    for tree in ["((A:1, B:1):2, C:3);", "tree_files/test1.nwk", "tree_files/test2.nwk", \
-            "tree_files/test3.nwk", "tree_files/test4.nwk", "tree_files/challenge.nwk",]:
-        ll = tree_log_likelihood(TimeTree(tree))
-        print(f"log likelihood for {tree} is {ll}")
+    t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);")
 
+    print(exp_tree_likelihood(t, 1000, 0.1))
 

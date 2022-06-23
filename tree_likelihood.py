@@ -56,7 +56,6 @@ def con_segment_likelihood(tree, N, start, end):
     """
     k = len(children_at_time(tree, start))
     z = end - start
-    #print(f"({start}, {end}) k={k} N={N} z={z}")
     return np.log(con_probability(k, N, z))
 
 def lin_segment_likelihood(tree, N, b, start, end):
@@ -66,7 +65,6 @@ def lin_segment_likelihood(tree, N, b, start, end):
     """
     k = len(children_at_time(tree, start))
     z = end - start
-    #print(f"({start}, {end}) k={k} N={N} z={z}")
     return np.log(lin_probability(k, N, b, z))
 
 def exp_segment_likelihood(tree, N, r, start, end):
@@ -76,7 +74,6 @@ def exp_segment_likelihood(tree, N, r, start, end):
     """
     k = len(children_at_time(tree, start))
     z = end - start
-    #print(f"({start}, {end}) k={k} N={N} z={z}")
     return np.log(exp_probability(k, N, r, z))
 #
 # Log likelihood of an entire tree
@@ -91,7 +88,6 @@ def con_tree_likelihood(tree, N):
     for (start, end) in tree_segments(tree):
         segment_likelihood = con_segment_likelihood(tree, N, start, end)
         log_likelihood += segment_likelihood
-        #print(f"  {segment_likelihood}")
     return log_likelihood
 
 def lin_tree_likelihood(tree, N0, b):
@@ -103,7 +99,6 @@ def lin_tree_likelihood(tree, N0, b):
     for (start, end) in tree_segments(tree):
         segment_likelihood = lin_segment_likelihood(tree, N0, b, start, end)
         log_likelihood += segment_likelihood
-        #print(f"  {segment_likelihood}")
         N0 -= b*(end-start)
     return log_likelihood
 
@@ -117,12 +112,16 @@ def exp_tree_likelihood(tree, N0, r):
         #N = N0 * np.exp(-r*(end-start))
         segment_likelihood = exp_segment_likelihood(tree, N0, r, start, end)
         log_likelihood += segment_likelihood
-        #print(f"  {segment_likelihood}")
         N0 *= np.exp(-r*(end-start))
     return log_likelihood
 
 if __name__ == "__main__":
-    t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);")
+    t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);") # slightly more complex test case
 
+    print(con_tree_likelihood(t, 1000))
+    print(lin_tree_likelihood(t, 1000, 10))
     print(exp_tree_likelihood(t, 1000, 0.1))
+
+    t.show()
+    
 

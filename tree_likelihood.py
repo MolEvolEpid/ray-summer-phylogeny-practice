@@ -8,35 +8,23 @@ from time_tree import TimeTree
 # Breaking a tree into parts and finding k
 #
 
-def closest_parent_node(tree, time):
-    """
-    Return the next closest node backwards from the specified time.
-    (for instance, the next node inwards from the leaves at time 0)
-    """
-    closest_node = tree
-    for node in tree.traverse():
-        # Any candidates need to be:
-        #     Sooner than the current best time
-        #     Later than the target time
-        #     Have children (not be a leaf)
-        if node.time < closest_node.time and node.time > time and node.children:
-            closest_node = node
-    return closest_node
-
 def closest_node(tree, time):
+    """
+    Return the next node back from the specified time.
+    """
     closest_node = tree
     for node in tree.traverse():
         if node.time < closest_node.time and node.time > time:
             closest_node = node
     return closest_node
 
-def children_at_time(node, time):
+def count_lineages(node, time):
     """
     Return the number of a node's children that exist at a certain time.
     """
-    if time >= node.time:
+    if time > node.time:
         raise Exception("Time must be after the node's own time")
-    return [n for n in node.iter_descendants() if n.time <= time < n.up.time]
+    return len([n for n in node.iter_descendants() if n.time <= time < n.up.time])
 
 def tree_segments(tree):
     """
@@ -56,13 +44,6 @@ def tree_segments(tree):
 # Log likelihood of an entire tree
 #
 
-def count_lineages(tree, start, end):
-    """
-    Return the number of lineages between the given start and end times 
-    """
-    k = len(children_at_time(tree, (start+end)/2))
-    return k
-
 def con_tree_likelihood(tree, N):
     """
     The log likelihood of a certain tree existing, assuming a
@@ -70,8 +51,11 @@ def con_tree_likelihood(tree, N):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, start, end)
-        log_likelihood += np.log(con_probability(k, N, end-start))
+        k = count_lineages(tree, (start+end)/2)
+        if k == 1:
+            pass
+        else:
+            log_likelihood += np.log(con_probability(k, N, end-start))
     return log_likelihood
 
 def lin_tree_likelihood(tree, N0, b):
@@ -81,8 +65,11 @@ def lin_tree_likelihood(tree, N0, b):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, start, end)
-        log_likelihood += np.log(lin_probability(k, N0, b, end-start))
+        k = count_lineages(tree, (start+end)/2)
+        if k == 1:
+            pass
+        else:
+            log_likelihood += np.log(lin_probability(k, N0, b, end-start))
         N0 -= b*(end-start)
     return log_likelihood
 
@@ -93,17 +80,21 @@ def exp_tree_likelihood(tree, N0, r):
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, start, end)
-        log_likelihood += np.log(exp_probability(k, N0, r, end-start))
+        k = count_lineages(tree, (start+end/2))
+        if k == 1:
+            pass
+        else:
+            log_likelihood += np.log(exp_probability(k, N0, r, end-start))
         N0 *= np.exp(-r*(end-start))
     return log_likelihood
 
 if __name__ == "__main__":
     t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);") # slightly more complex test case
+    t2 = TimeTree("((a:4, a:2):1, a:3);")
 
-    print(con_tree_likelihood(t, 1000))
-    print(lin_tree_likelihood(t, 1000, 10))
-    print(exp_tree_likelihood(t, 1000, 0.1))
+    #print(con_tree_likelihood(t, 1000))
+    #print(lin_tree_likelihood(t, 1000, 10))
+    #print(exp_tree_likelihood(t, 1000, 0.1))
 
     t.show()
     

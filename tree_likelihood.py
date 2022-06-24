@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from population_models import con_probability, lin_probability, exp_probability
+from population_models import con_probability, lin_probability, exp_probability, \
+        con_population, lin_population, exp_population
 from time_tree import TimeTree
 
 #
@@ -44,60 +45,33 @@ def tree_segments(tree):
 # Log likelihood of an entire tree
 #
 
-# TODO: reduce duplication by using more params. but I don't have time right now.
-
-def con_tree_likelihood(tree, N):
+def tree_likelihood(tree, population, probability, params):
     """
-    The log likelihood of a certain tree existing, assuming a
-    constant population of N(t) = N
+    Return the log likelihood of a certain tree existing
+    based on the given population model and probability function.
+
+    Required parameters:
+      Any parameters the probability requires besides K 
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, (start+end)/2)
-        if k == 1:
+        params["k"] = count_lineages(tree, (start+end)/2)
+        if params["k"] == 1:
             pass
         else:
-            log_likelihood += np.log(con_probability({"k": k, "N": N}, end-start))
-    return log_likelihood
-
-def lin_tree_likelihood(tree, N0, b):
-    """
-    The log likelihood of a certain tree existing, assuming a
-    linear population of N(t) = N0 - bt
-    """
-    log_likelihood = 0
-    for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, (start+end)/2)
-        if k == 1:
-            pass
-        else:
-            log_likelihood += np.log(lin_probability({"k": k, "N0": N0, "b": b}, end-start))
-        N0 -= b*(end-start)
-    return log_likelihood
-
-def exp_tree_likelihood(tree, N0, r):
-    """
-    The log likelihood of a certain tree existing, assuming an
-    exponential population of N(t) = N0 * e^-rt
-    """
-    log_likelihood = 0
-    for (start, end) in tree_segments(tree):
-        k = count_lineages(tree, (start+end)/2)
-        if k == 1:
-            pass
-        else:
-            log_likelihood += np.log(exp_probability({"k": k, "N0": N0, "r": r}, end-start))
-        N0 *= np.exp(-r*(end-start))
+            log_likelihood += np.log(probability(params, end-start))
+        if "N0" in params.keys():
+            params["N0"] = population(params, end-start)
     return log_likelihood
 
 if __name__ == "__main__":
     t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);") # slightly more complex test case
     t2 = TimeTree("((a:4, a:2):1, a:3);")
 
-    print(con_tree_likelihood(t, 1000))
-    print(lin_tree_likelihood(t, 1000, 10))
-    print(exp_tree_likelihood(t, 1000, 0.1))
+    print(tree_likelihood(t, con_population, con_probability, {"N": 1000}))
+    print(tree_likelihood(t, lin_population, lin_probability, {"N0": 1000, "b": 10}))
+    print(tree_likelihood(t, exp_population, exp_probability, {"N0": 1000, "r": 0.1}))
 
-    t.show()
+    t2.show()
     
 

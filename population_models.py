@@ -42,7 +42,7 @@ def exp_population(params, t):
     r = params["r"]
     return round(N0 * np.exp(-r*t))
 
-def time_until_next(pop_model, params):
+def time_until_next(population, params):
     """
     Return the time until a coalescence occurs in a given population model.
 
@@ -53,7 +53,7 @@ def time_until_next(pop_model, params):
     t = 0
     while True:
         t += 1
-        N = pop_model(params, t)
+        N = population(params, t)
         parents = set()
         for i in range(params["k"]):
             p = random.randint(0, N-1)
@@ -113,19 +113,19 @@ def exp_probability(params, z):
 # for each population model
 #
 
-def histogram(pop_model, prob_function, params, replicates):
+def histogram(population, probability, params, replicates):
     """
     Return the necessary data to plot a histogram of the probability of
     coalescence over time.
 
-    pop_model     : function con_- lin_- or exp_population
-    prob_function : function con_- lin_- or exp_probability
-    params        : dictionary of required parameters for pop_model and prob_function
-    replicates    : integer (> 0)
+    population  : function con_- lin_- or exp_population
+    probability : function con_- lin_- or exp_probability
+    params      : dictionary of required parameters for population and probability
+    replicates  : integer (> 0)
     """
-    times = [time_until_next(pop_model, params) for i in range(replicates)]
+    times = [time_until_next(population, params) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)
-    y = [prob_function(params, z) for z in x]
+    y = [probability(params, z) for z in x]
 
     keys = params.keys()
     labels = {"k": str(params["k"])}

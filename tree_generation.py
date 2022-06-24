@@ -64,3 +64,7 @@ def create_tree(params):
     while len(nodes) > 1:
         nodes = con_coalescence(nodes, params)
     return nodes[0]
+
+if __name__ == "__main__":
+    t = create_tree({"N": 1000, "k": 20})
+    t.write(format=1, outfile="out.nwk") 

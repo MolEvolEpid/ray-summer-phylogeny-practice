@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import matplotlib.pyplot as plt
 import numpy as np
 from population_models import con_probability, lin_probability, exp_probability, \
         con_population, lin_population, exp_population
@@ -64,14 +65,51 @@ def tree_likelihood(tree, population, probability, params):
             params["N0"] = population(params, end-start)
     return log_likelihood
 
+#
+# Find most likely parameter of a tree by trying many possible values and choosing the best
+#
+
+def con_likelihood_surface(tree, N_range):
+    """
+    Create a likelihood surface for a tree. IDK what to do at all hellllppppp
+    """
+    likelihoods = []
+    for N in N_range:
+        likelihoods.append(tree_likelihood(tree, con_population, con_probability, {"N": N}))
+    return likelihoods
+
+def likelihood_surface(tree, population, probability, fixed, ranged):
+    """
+    I don't know yet
+
+    Parameters:
+      tree        : TimeTree
+      population  : con_- lin_- or exp_population
+      probability : con_- lin_- or exp_probability
+      fixed       : tuple with string name and value
+      ranged      : tuple with string name and list of values
+    """
+    likelihoods = []
+    for item in ranged[1]:
+        likelihoods.append(tree_likelihood(tree, population, probability, \
+                {ranged[0]: item, fixed[0]: fixed[1]})) # we need to provide a fake "fixed" value for con
+    return likelihoods
+
+
 if __name__ == "__main__":
-    t = TimeTree("(((a:1, a:1):2, a:3):2, (a:3, a:3):2);") # slightly more complex test case
-    t2 = TimeTree("((a:4, a:2):1, a:3);")
+    x = np.linspace(100, 1000, 1000)
+    t = TimeTree("out.nwk")
+    con = likelihood_surface(t, con_population, con_probability, \
+            ("fake", 0), ("N", np.linspace(100, 1000, 1000)))
+    lin = likelihood_surface(t, lin_population, lin_probability, \
+            ("N0", 1000), ("b", np.linspace(1, 3, 10)))
+    exp = likelihood_surface(t, exp_population, exp_probability, \
+            ("N0", 1000), ("r", np.linspace(0.01, 0.5, 100)))
 
-    print(tree_likelihood(t, con_population, con_probability, {"N": 1000}))
-    print(tree_likelihood(t, lin_population, lin_probability, {"N0": 1000, "b": 10}))
-    print(tree_likelihood(t, exp_population, exp_probability, {"N0": 1000, "r": 0.1}))
+    plt.plot(x, con, color="red")
+    plt.plot(x, lin, color="green")
+    plt.plot(x, exp, color="blue")
 
-    t2.show()
-    
+    plt.show()
+
 

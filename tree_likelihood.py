@@ -97,19 +97,12 @@ def likelihood_surface(tree, population, probability, fixed, ranged):
 
 
 if __name__ == "__main__":
-    x = np.linspace(100, 1000, 1000)
-    t = TimeTree("out.nwk")
-    con = likelihood_surface(t, con_population, con_probability, \
-            ("fake", 0), ("N", np.linspace(100, 1000, 1000)))
-    lin = likelihood_surface(t, lin_population, lin_probability, \
-            ("N0", 1000), ("b", np.linspace(1, 3, 10)))
-    exp = likelihood_surface(t, exp_population, exp_probability, \
-            ("N0", 1000), ("r", np.linspace(0.01, 0.5, 100)))
-
-    plt.plot(x, con, color="red")
-    plt.plot(x, lin, color="green")
-    plt.plot(x, exp, color="blue")
-
-    plt.show()
-
+    x = np.linspace(10, 10000, 10000)
+    with open('linear.tre') as file:
+        lines = file.readlines()
+        for line in lines:
+            t = TimeTree(line)
+            y = [tree_likelihood(t, lin_population, lin_probability, {"N0": 10000, "b": b}) for b in x]
+            plt.plot(x, y)
+            plt.show()
 

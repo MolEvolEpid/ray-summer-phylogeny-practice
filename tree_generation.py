@@ -1,92 +1,66 @@
+#!/usr/bin/env python3
+
+"""
+The plan for what this needs to be:
+    It needs to be able to generate trees, for now I should assume that any pairings are equally
+    likely.
+
+    I want all things to start at the same time (time zero).
+
+    I want to be able to make the branch lengths based on a constant population model,
+    but also have a decent way to expand it to a linear or exponential model.
+        Emma said I should randomly choose from the exponential distribution which has a mean of 
+        1/lambda or something. I honestly don't totally know at all.
+
+        But do NOT use the time_until_next() function!!! I need the continuous version, essentially
+"""
+
+import numpy as np
 import random
 from ete3 import TreeNode
+from numpy.random import Generator, PCG64
+from operator import attrgetter
 
-class TreeGenerator:
-	def __init__(self, n):
-		self.nodes = []
-		for i in range(n):
-			host = random.choice(["A", "B"])
-			node = TreeNode(name=host)
-			node.host = host
-			node.time = 1
-			self.nodes.append(node)
+def generate_nodes(k):
+    return [TreeNode(dist=0, name=str(i)) for i in range(k)]
 
-	def find_weighted_partner(self, node):
-		"""
-		Given a node, find the other possible nodes it is most likely
-		to pair with. 
-		A node is most likely to pair with one from its own host, then one of an 
-		unknown host, then one of a different host.
-		"""
-		partners = [item for item in self.nodes if item != node]
-		
-		weights = []
-		for partner in partners:
-			if partner.host == "?": # undetermined host is a base case so it gets weight 1
-				weights.append(1)
-			elif partner.host == node.host: # same host is more likely
-				weights.append(2)
-			else: # different host is less likely
-				weights.append(0.5)
+def con_coalescence(nodes, params): # when we have a way to pick from exp and lin dists I can expand this
+    # Time until coalescence occurs
+    k = len(nodes)
+    scale = (2*params["N"]) / (k*(k-1))
+    rng = Generator(PCG64()) # TODO this could go outside the function but idk if it should or not
+    coal_time = rng.exponential(scale=scale)
 
-		return random.choices(partners, weights=weights)[0]
+    # Choose nodes to pair
+    random.shuffle(nodes)
+    n1 = nodes.pop()
+    n2 = nodes.pop()
 
-	def intuitive_inheritance(self, child1, child2):
-		"""
-		Based on two child nodes, decide what host their parent is most
-		likely to have.
-		"""
-		h1 = child1.host
-		h2 = child2.host
-		if h1 == h2:
-			return h1
-		elif h1 == "?":
-			return h2
-		elif h2 == "?":
-			return h1
-		else:
-			return "?"
+    # Assign each node a time so they will be even with each other
+    ## Find the max len
+    max_len = 0
+    for n in [n1, n2]:
+        n.len = n.get_farthest_node()[1]
+        if n.len > max_len:
+            max_len = n.len
+    ## Scale each node's dist
+    parent = TreeNode(dist=0)
+    for n in [n1, n2]:
+        n.dist = coal_time + max_len - n.len
+        parent.add_child(n) 
+    nodes.append(parent)
 
-	def step(self):
-		"""
-		Take a timestep, randomly deciding whether to take any actions.
-		At the moment this is redundant, but when time is a bigger factor
-		it will be important that something does not necessarily happen
-		at every timestep.
-		"""
-		if random.random() < 0.15:
-			self.make_pair()
+    return nodes
 
-	def make_pair(self):
-		"""
-		Choose two nodes and combine their lineages at a common parent.
-		That parent is then able to pair with other nodes.
-		"""
-		first = random.choice(self.nodes)
-		second = self.find_weighted_partner(first)
+def create_tree(params):
+    """
+    Create a tree based on the provided parameters.
 
-		parent = TreeNode()
-		parent.host = self.intuitive_inheritance(first, second)
-		for child in [first, second]:
-			parent.add_child(child)
-			self.nodes.remove(child)
-
-		self.nodes.append(parent)
-
-	def run(self):
-		"""
-		Run the model until only one node is left and return that node.
-		"""
-		while len(self.nodes) > 1:
-			self.step()
-		return self.nodes[0]
-
-if __name__ == '__main__':
-	"""
-	Run from the command line, prints an example tree with 15 nodes.
-	"""
-	g = TreeGenerator(15)
-	end = g.run()
-	print(end)
-	#end.write(format=1, outfile="tests/output.nwk")
-
+    Required parameters:
+      k
+      Any parameters required by probability (generally either N or N0 and another parameter)
+    """
+    nodes = generate_nodes(params["k"]) # TODO we never use params["k"] again to generate so it should stay the same
+    while len(nodes) > 1:
+        nodes = con_coalescence(nodes, params)
+    return nodes[0]

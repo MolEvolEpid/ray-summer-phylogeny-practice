@@ -52,12 +52,14 @@ def tree_likelihood(tree, population, probability, params):
     based on the given population model and probability function.
 
     Required parameters:
-      Any parameters the probability requires besides K 
+      Any parameters the probability requires besides K
     """
     log_likelihood = 0
     for (start, end) in tree_segments(tree):
-        params["k"] = count_lineages(tree, (start+end)/2)
+        params["k"] = count_lineages(tree, (start+end)/2) # TODO should I just use start? or is middle good
         if params["k"] == 1:
+            # TODO we actually need to handle this but I can't
+            # it involves taking the integral of the probability function and stuff.
             pass
         else:
             log_likelihood += np.log(probability(params, end-start))
@@ -69,40 +71,40 @@ def tree_likelihood(tree, population, probability, params):
 # Find most likely parameter of a tree by trying many possible values and choosing the best
 #
 
-def con_likelihood_surface(tree, N_range):
+def likelihood_surface(tree, population, probability, params):
     """
-    Create a likelihood surface for a tree. IDK what to do at all hellllppppp
-    """
-    likelihoods = []
-    for N in N_range:
-        likelihoods.append(tree_likelihood(tree, con_population, con_probability, {"N": N}))
-    return likelihoods
-
-def likelihood_surface(tree, population, probability, fixed, ranged):
-    """
-    I don't know yet
+    The likelihood surface of a tree with a certain model, one ranged parameter,
+    and one fixed parameter.
 
     Parameters:
       tree        : TimeTree
       population  : con_- lin_- or exp_population
       probability : con_- lin_- or exp_probability
-      fixed       : tuple with string name and value
-      ranged      : tuple with string name and list of values
+      params      : dictionary with two items
+                    one should be an iterable parameter and the other should be fixed
     """
     likelihoods = []
-    for item in ranged[1]:
-        likelihoods.append(tree_likelihood(tree, population, probability, \
-                {ranged[0]: item, fixed[0]: fixed[1]})) # we need to provide a fake "fixed" value for con
+    for p in params.keys():
+        try:
+            iter(params[p])
+            ranged_name, ranged = p, params[p]
+        except TypeError:
+            fixed_name, fixed = p, params[p]
+
+    for item in ranged:
+        lk = tree_likelihood(tree, population, probability, \
+                {ranged_name: item, fixed_name: fixed})
+        likelihoods.append(lk)
+
     return likelihoods
 
-
 if __name__ == "__main__":
-    x = np.linspace(10, 10000, 10000)
+    b_range = np.linspace(0, 1000, 10000)
     with open('linear.tre') as file:
         lines = file.readlines()
         for line in lines:
             t = TimeTree(line)
-            y = [tree_likelihood(t, lin_population, lin_probability, {"N0": 10000, "b": b}) for b in x]
-            plt.plot(x, y)
+            y = likelihood_surface(t, lin_population, lin_probability, {"N0": 10000, "b": b_range})
+            plt.plot(b_range, y)
             plt.show()
 

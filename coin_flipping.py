@@ -16,8 +16,8 @@ def count_faces(string):
     for face in string.split():
         if face.lower() == "h":
             heads += 1
-    elif face.lower() == "t":
-        tails += 1
+        elif face.lower() == "t":
+            tails += 1
     return heads, tails
 
 def likelihood(p, heads, tails):

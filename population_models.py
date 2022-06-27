@@ -127,19 +127,20 @@ def histogram(population, probability, params, replicates):
     x = np.linspace(0, max(times), 1000)
     y = [probability(params, z) for z in x]
 
-    keys = params.keys()
     labels = {"k": str(params["k"])}
-    if "r" in keys:
+    if "r" in params:
         labels["type"] = "Exponential"
         labels["N"] = str(params["N0"])
         labels["r"] = str(params["r"])
-    elif "b" in keys:
+    elif "b" in params:
         labels["type"] = "Linear"
         labels["N"] = str(params["N0"])
         labels["b"] = str(params["b"])
-    else:
+    elif "N" in params:
         labels["type"] = "Constant"
         labels["N"] = str(params["N"])
+    else:
+        raise Exception("We shouldn't have gotten to here. Check parameters.")
 
     return times, x, y, labels
 

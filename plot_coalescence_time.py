@@ -13,7 +13,7 @@ def probability_overlay(times, x, y, labels):
 
     # Plot the data
     ax.plot(x, y, color=color2, label="Theoretical probability curve")
-    ax.hist(times, bins=range(0, max(times)), density=True, color=color1, \
+    ax.hist(times, bins=range(0, round(max(times))), density=True, color=color1, \
             label="Simulated coalescence timing")
 
     # Styles

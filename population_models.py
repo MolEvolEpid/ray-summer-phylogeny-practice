@@ -190,8 +190,10 @@ def exp_multi_histogram(k_range, N0_range, r_range, replicates):
 
 
 if __name__ == "__main__":
-    con_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], 1000)
-    lin_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], [1, 1, 1, 1], 1000)
-    lin_multi_histogram([10, 10, 10, 10], [1000, 1000, 1000, 1000], [0.5, 1, 1.5, 2], 1000)
-    exp_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], [0.1, 0.1, 0.1, 0.1], 1000)
-    exp_multi_histogram([10, 10, 10, 10], [1000, 1000, 1000, 1000], [0.1, 0.2, 0.3, 0.4], 1000)
+    times, x, y, labels = histogram(con_population, con_probability, {"N": 10000, "k": 50}, 1000)
+    probability_overlay(times, x, y, labels)
+    #con_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], 1000)
+    #lin_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], [1, 1, 1, 1], 1000)
+    #lin_multi_histogram([10, 10, 10, 10], [1000, 1000, 1000, 1000], [0.5, 1, 1.5, 2], 1000)
+    #exp_multi_histogram([6, 10, 14, 18],  [1000, 1000, 1000, 1000], [0.1, 0.1, 0.1, 0.1], 1000)
+    #exp_multi_histogram([10, 10, 10, 10], [1000, 1000, 1000, 1000], [0.1, 0.2, 0.3, 0.4], 1000)

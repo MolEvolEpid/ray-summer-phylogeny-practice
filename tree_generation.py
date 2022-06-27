@@ -52,7 +52,7 @@ def con_coalescence(nodes, params): # when we have a way to pick from exp and li
 
     return nodes
 
-def create_tree(params):
+def generate_tree(params):
     """
     Create a tree based on the provided parameters.
 
@@ -60,10 +60,10 @@ def create_tree(params):
       k
       Any parameters required by probability (generally either N or N0 and another parameter)
     """
-    nodes = generate_nodes(params["k"]) # TODO we never use params["k"] again to generate so it should stay the same
+    nodes = generate_nodes(params["k"])
     while len(nodes) > 1:
         nodes = con_coalescence(nodes, params)
-    return nodes[0]
+    return nodes[0].write(format=1)
 
 if __name__ == "__main__":
     t = create_tree({"N": 1000, "k": 20})

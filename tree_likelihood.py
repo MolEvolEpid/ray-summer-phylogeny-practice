@@ -2,9 +2,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from time_tree import TimeTree
+from tree_generation import generate_tree
 from population_models import con_probability, lin_probability, exp_probability, \
         con_population, lin_population, exp_population
-from time_tree import TimeTree
 
 #
 # Breaking a tree into parts and finding k
@@ -35,7 +36,8 @@ def sampling_groups(tree):
         if not any(leaf in group for group in groups):
             groups.append([leaf])
     if len(groups) != 1:
-        print("WARNING: sampling_groups returned more than one group, which is currently unsupported")
+        print("WARNING: sampling_groups returned more than one group, \
+                which is currently unsupported")
     return groups
 
 def count_lineages(tree, time):
@@ -78,21 +80,18 @@ def tree_likelihood(tree, population, probability, params):
     based on the given population model and probability function.
 
     Required parameters:
-      Any parameters the probability requires besides K
+      Any parameters the probability requires besides k
     """
     log_likelihood = 0
     if "N0" in params:
         params["N"] = params["N0"]
     for (start, end) in tree_segments(tree):
         params["k"] = count_lineages(tree, start)
-        #print(params["k"])
         if params["k"] == 1:
             # TODO we actually need to handle this
-            pass
+            print("WARNING: k was 1")
         else:
             branch_likelihood = np.log(probability(params, end-start))
-            print(params)
-            print(f"  {branch_likelihood}")
             log_likelihood += branch_likelihood
         params["N"] = population(params, end-start)
     return log_likelihood
@@ -114,34 +113,53 @@ def likelihood_surface(tree, population, probability, params):
       params      : dictionary with two items
                     one should be an iterable parameter and the other should be fixed
     """
-    # Figure out what the parameters are (this is a mess)
-    for p in params.keys():
+    # Figure out what the parameters are
+    # Will totally break if there is more than one iterable and one non-iterable
+    for key in params:
         try:
-            iter(params[p])
-            ranged_name, ranged = p, params[p]
+            iter(params[key])
+            ranged_name = key
+            ranged = params[key]
         except TypeError:
-            fixed_name, fixed = p, params[p]
+            fixed_name = key
+            fixed = params[key]
 
     # Generate a likelihood for each point
     likelihoods = []
-    for item in ranged:
-        print(f"{ranged_name}: {item}, {fixed_name}: {fixed}")
+    for r in ranged:
         lk = tree_likelihood(tree, population, probability, \
-                {ranged_name: item, fixed_name: fixed})
-        print(f"    {lk}")
+                {ranged_name: r, fixed_name: fixed})
         likelihoods.append(lk)
-
     return likelihoods
 
+def likelihood_surface_plot(params):
+    t = TimeTree(generate_tree(params))
+    log_likelihood = likelihood_surface(t, con_population, con_probability, \
+            {"N": params["N_range"], "fake": 1})
+    likelihood = [np.exp(lk) for lk in log_likelihood]
+    plt.plot(params["N_range"], likelihood)
+    plt.show()
+    return likelihood, log_likelihood
+
+from plot_coalescence_time import probability_overlay # TODO remove or move this
+def tree_time_overlay(params):
+    for k in reversed(range(2, params["k"] + 1)): # k, k-1, k-2, ... 2 
+        times = []
+        for i in range(1000):
+            t = TimeTree(generate_tree({"N": params["N"], "k": k}))
+            segments = list(reversed(tree_segments(t))) # so we can look up by k
+            for s in segments:
+                print(f"{s}\t{segments[k-2]}")
+            print()
+            #print(f"{k}\n{groups[-1]} {groups[k-2]}\n")
+            times.append(segments[k-2][1] - segments[k-2][0])
+            x = np.linspace(0, max(times), 1000)
+            y = [con_probability({"N": params["N"], "k": k}, z) for z in x]
+        labels = {"type": "Constant", "N": str(params["N"]), "k": str(k)}
+        probability_overlay(times, x, y, labels)
+
 if __name__ == "__main__":
-    b_range = np.linspace(0, 1000, 10000)
-    with open('linear.tre') as file:
-        lines = file.readlines()
-        test = TimeTree(lines[0])
-        """
-        for line in lines:
-            t = TimeTree(line)
-            y = likelihood_surface(t, lin_population, lin_probability, {"N0": 10000, "b": b_range})
-            plt.plot(b_range, y)
-            plt.show()
-        """
+    params = {"N": 1000, "k": 20, "N_range": np.linspace(100, 2000, 1000)}
+    #likelihood, log_likelihood = likelihood_surface_plot(params)
+    tree_time_overlay(params)
+

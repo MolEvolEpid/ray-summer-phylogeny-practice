@@ -133,33 +133,33 @@ def likelihood_surface(tree, population, probability, params):
     return likelihoods
 
 def likelihood_surface_plot(params):
-    t = TimeTree(generate_tree(params))
+    t = TimeTree(generate_tree(con_population, params))
     log_likelihood = likelihood_surface(t, con_population, con_probability, \
             {"N": params["N_range"], "fake": 1})
     likelihood = [np.exp(lk) for lk in log_likelihood]
     plt.plot(params["N_range"], likelihood)
     plt.show()
-    return likelihood, log_likelihood
+    return t
 
 from plot_coalescence_time import probability_overlay # TODO remove or move this
 def tree_time_overlay(params):
-    for k in reversed(range(2, params["k"] + 1)): # k, k-1, k-2, ... 2 
+    for k in range(params["k"], 1, -1):
         times = []
         for i in range(1000):
-            t = TimeTree(generate_tree({"N": params["N"], "k": k}))
-            segments = list(reversed(tree_segments(t))) # so we can look up by k
-            for s in segments:
-                print(f"{s}\t{segments[k-2]}")
-            print()
-            #print(f"{k}\n{groups[-1]} {groups[k-2]}\n")
-            times.append(segments[k-2][1] - segments[k-2][0])
+            t = TimeTree(generate_tree(con_population, {"N": params["N"], "k": params["k"]}))
+            segments = tree_segments(t)
+            time = segments[len(segments)+1 - k] # The segment at the desired k
+            #print(f"time {time} at k {k}")
+            times.append(time[1] - time[0])
             x = np.linspace(0, max(times), 1000)
             y = [con_probability({"N": params["N"], "k": k}, z) for z in x]
+        #print(f"STARTING WITH k = {k}")
+        #print(f"mean: {sum(times) / len(times)}\tmin: {min(times)}\tmax: {max(times)}")
         labels = {"type": "Constant", "N": str(params["N"]), "k": str(k)}
         probability_overlay(times, x, y, labels)
 
 if __name__ == "__main__":
     params = {"N": 1000, "k": 20, "N_range": np.linspace(100, 2000, 1000)}
-    #likelihood, log_likelihood = likelihood_surface_plot(params)
-    tree_time_overlay(params)
+    t = likelihood_surface_plot(params)
+    #tree_time_overlay(params)
 

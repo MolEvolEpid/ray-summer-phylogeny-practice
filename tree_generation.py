@@ -3,11 +3,13 @@
 import numpy as np
 from ete3 import TreeNode
 from numpy.random import Generator, PCG64
+from population_models import con_population, lin_population, exp_population
 
-def con_coalescence(nodes, params): # TODO expand with linear and exponential later
+rng = Generator(PCG64())
+
+def con_coalescence(nodes, population, params): # TODO expand with linear and exponential later
     # Time until coalescence occurs
     scale = (2*params["N"]) / (params["k"]*(params["k"]-1))
-    rng = Generator(PCG64())
     coal_time = rng.exponential(scale=scale)
 
     # Add distance to all existing nodes to make sure they align
@@ -25,9 +27,14 @@ def con_coalescence(nodes, params): # TODO expand with linear and exponential la
         parent.add_child(n)
     nodes.append(parent)
 
+    # Adjust the population size and k
+    params["k"] -= 1
+    if "N0" in params:
+        params["N0"] = population(params, coal_time)
+
     return nodes
 
-def generate_tree(params):
+def generate_tree(population, params):
     """
     Create a tree based on the provided parameters.
 
@@ -37,7 +44,7 @@ def generate_tree(params):
     """
     nodes = [TreeNode(dist=0, name=str(i)) for i in range(params["k"])]
     while len(nodes) > 1:
-        nodes = con_coalescence(nodes, params)
+        nodes = con_coalescence(nodes, population, params)
     return nodes[0].write(format=1)
 
 if __name__ == "__main__":

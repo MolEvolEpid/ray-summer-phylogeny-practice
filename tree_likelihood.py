@@ -90,10 +90,9 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
-    for (start, dist) in tree_segments(tree):
     if "N0" in params:
         params["N"] = params["N0"]
-    for (start, end) in tree_segments(tree):
+    for (start, dist) in tree_segments(tree):
         params["k"] = count_lineages(tree, start)
         if params["k"] == 1:
             # TODO we actually need to handle this
@@ -101,7 +100,7 @@ def tree_likelihood(tree, population, probability, params):
         else:
             branch_likelihood = np.log(probability(params, dist))
             log_likelihood += branch_likelihood
-        params["N"] = population(params, end-start)
+        params["N"] = population(params, dist)
     return log_likelihood
 
 #
@@ -135,19 +134,19 @@ def likelihood_surface(tree, population, probability, params):
     # Generate a likelihood for each point
     likelihoods = []
     for r in ranged:
+        print(f"parameter is now {r}")
         lk = tree_likelihood(tree, population, probability, \
                 {ranged_name: r, fixed_name: fixed})
         likelihoods.append(lk)
     return likelihoods
 
 if __name__ == "__main__":
-    params = {"N0": 1000, "k": 20, "b": 5, "b_range": np.linspace(1, 10, 1000)}
+    params = {"N0": np.linspace(8000, 12000, 1000), "b": 9}
     with open("tree_files/linear.tre") as treefile:
-        for line in treefile.readlines():
-            t = TimeTree(line)
-            log_likelihood = likelihood_surface(t, lin_population, lin_probability, \
-                    {"N0": params["N0"], "b": params["b_range"]})
-            likelihood = [np.exp(lk) for lk in log_likelihood]
-            plt.plot(params["b_range"], likelihood)
-            plt.show()
-
+        line = treefile.readline()
+        t = TimeTree(line)
+        #t.show()
+        log_likelihood = likelihood_surface(t, lin_population, lin_probability, params)
+        likelihood = [np.exp(lk) for lk in log_likelihood]
+        plt.plot(params["N0"], likelihood)
+        plt.show()

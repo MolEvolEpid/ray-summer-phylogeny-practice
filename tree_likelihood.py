@@ -21,8 +21,12 @@ def closest_parent_node(tree, time):
             closest = node
     return closest
 
-def within_tolerance(time, leaf_time):
-    return time - 0.5 <= leaf_time <= time + 0.5
+def within_tolerance(t1, t2):
+    """
+    Return whether or not two times are close enough to each other
+    to be counted as the same sampling group.
+    """
+    return t1 - 0.5 <= t2 <= t1 + 0.5
 
 def sampling_groups(tree):
     """
@@ -134,35 +138,14 @@ def likelihood_surface(tree, population, probability, params):
         likelihoods.append(lk)
     return likelihoods
 
-def likelihood_surface_plot(params):
-    t = TimeTree(generate_tree(con_population, params))
-    log_likelihood = likelihood_surface(t, con_population, con_probability, \
-            {"N": params["N_range"], "fake": 1})
-    likelihood = [np.exp(lk) for lk in log_likelihood]
-    plt.plot(params["N_range"], likelihood)
-    plt.show()
-    return t
-
-from plot_coalescence_time import probability_overlay # TODO remove or move this
-def tree_time_overlay(params):
-    for k in range(params["k"], 1, -1):
-        times = []
-        for i in range(1000):
-            t = TimeTree(generate_tree(con_population, {"N": params["N"], "k": params["k"]}))
-            segments = tree_segments(t)
-            time = segments[len(segments)+1 - k] # The segment at the desired k
-            #print(f"time {time} at k {k}")
-            times.append(time[1] - time[0])
-            x = np.linspace(0, max(times), 1000)
-            y = [con_probability({"N": params["N"], "k": k}, z) for z in x]
-        #print(f"STARTING WITH k = {k}")
-        #print(f"mean: {sum(times) / len(times)}\tmin: {min(times)}\tmax: {max(times)}")
-        labels = {"type": "Constant", "N": str(params["N"]), "k": str(k)}
-        probability_overlay(times, x, y, labels)
-
 if __name__ == "__main__":
-    params = {"N": 1000, "k": 20, "N_range": np.linspace(100, 2000, 1000)}
-    t = likelihood_surface_plot(params)
-    #log_likelihood = likelihood_surface(TimeTree(generate_tree(con_population, params)), con_population, con_probability, {"N": params["N_range"], "fake": 1})
-    #tree_time_overlay(params)
+    params = {"N0": 1000, "k": 20, "b": 5, "b_range": np.linspace(1, 10, 1000)}
+    with open("tree_files/linear.tre") as treefile:
+        for line in treefile.readlines():
+            t = TimeTree(line)
+            log_likelihood = likelihood_surface(t, lin_population, lin_probability, \
+                    {"N0": params["N0"], "b": params["b_range"]})
+            likelihood = [np.exp(lk) for lk in log_likelihood]
+            plt.plot(params["b_range"], likelihood)
+            plt.show()
 

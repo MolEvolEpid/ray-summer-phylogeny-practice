@@ -63,7 +63,8 @@ def count_lineages(tree, time):
 def tree_segments(tree):
     """
     Divide a tree into segments based on the location of parent
-    nodes.
+    nodes. Each segment is a tuple (start dist), containing the
+    start time of a segment and how long it is in total.
     """
     node_times = [0]
     for node in tree.traverse():
@@ -73,7 +74,7 @@ def tree_segments(tree):
 
     segments = []
     for start, end in zip(node_times, node_times[1:]):
-        segments.append((start, end))
+        segments.append((start, end-start))
     return segments
 
 #
@@ -89,6 +90,7 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
+    for (start, dist) in tree_segments(tree):
     if "N0" in params:
         params["N"] = params["N0"]
     for (start, end) in tree_segments(tree):
@@ -97,7 +99,7 @@ def tree_likelihood(tree, population, probability, params):
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
-            branch_likelihood = np.log(probability(params, end-start))
+            branch_likelihood = np.log(probability(params, dist))
             log_likelihood += branch_likelihood
         params["N"] = population(params, end-start)
     return log_likelihood

@@ -21,6 +21,9 @@ def closest_parent_node(tree, time):
             closest = node
     return closest
 
+def within_tolerance(time, leaf_time):
+    return time - 0.5 <= leaf_time <= time + 0.5
+
 def sampling_groups(tree):
     """
     Organize the leaves of a tree by groups sampled at approximately
@@ -29,15 +32,14 @@ def sampling_groups(tree):
     groups = []
     for leaf in tree.iter_leaves():
         for group in groups:
-            if (group[0].time - 0.005) <= leaf.time <= (group[0].time + 0.005):
+            if within_tolerance(group[0].time, leaf.time):
                 group.append(leaf)
                 break
         # If the leaf isn't in any groups, add it to a new one
         if not any(leaf in group for group in groups):
             groups.append([leaf])
     if len(groups) != 1:
-        print("WARNING: sampling_groups returned more than one group, \
-                which is currently unsupported")
+        print(f"WARNING: sampling_groups returned {len(groups)} groups, which is currently unsupported\n{groups}\n")
     return groups
 
 def count_lineages(tree, time):
@@ -48,7 +50,7 @@ def count_lineages(tree, time):
     if time > tree.time:
         raise Exception("Time must be after the tree time")
     for group in sampling_groups(tree):
-        if (group[0].time - 0.01) <= time <= (group[0].time + 0.01):
+        if within_tolerance(group[0].time, time):
             # TODO this won't hold up if we have more than one group since we should also add
             # anything else that exists at the time
             return len(group)
@@ -161,5 +163,6 @@ def tree_time_overlay(params):
 if __name__ == "__main__":
     params = {"N": 1000, "k": 20, "N_range": np.linspace(100, 2000, 1000)}
     t = likelihood_surface_plot(params)
+    #log_likelihood = likelihood_surface(TimeTree(generate_tree(con_population, params)), con_population, con_probability, {"N": params["N_range"], "fake": 1})
     #tree_time_overlay(params)
 

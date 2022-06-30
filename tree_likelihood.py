@@ -26,7 +26,7 @@ def within_tolerance(t1, t2):
     Return whether or not two times are close enough to each other
     to be counted as the same sampling group.
     """
-    return t1 - 0.5 <= t2 <= t1 + 0.5
+    return t1 - 0.003 <= t2 <= t1 + 0.003
 
 def sampling_groups(tree):
     """

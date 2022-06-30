@@ -14,9 +14,9 @@ def con_population(params, t):
     Return a constant population at time t.
 
     Required parameters:
-      N : population size
+      N0 : population size
     """
-    return params["N"]
+    return params["N0"]
 
 def lin_population(params, t):
     """
@@ -24,7 +24,7 @@ def lin_population(params, t):
 
     Required parameters:
       N0 : population size at time 0
-      b  : slope (> 0)
+      b : slope (> 0)
     """
     N0 = params["N0"]
     b = params["b"]
@@ -36,7 +36,7 @@ def exp_population(params, t):
 
     Required parameters:
       N0 : population at time 0
-      r  : rate of change (> 0)
+      r : rate of change (> 0)
     """
     N0 = params["N0"]
     r = params["r"]
@@ -71,23 +71,27 @@ def con_probability(params, z):
     """
     The proabaility of a coalescence at time z with constant population
 
-    Required parameters:
-      k : sample size
-      N : population
+    Parameters:
+      params : dictionary
+        k : sample size
+        N0 : population
+      z : time of occurence
     """
     k = params["k"]
-    N = params["N"]
-    lmd = k*(k - 1)/(2*N)
+    N0 = params["N0"]
+    lmd = k*(k - 1)/(2*N0)
     return lmd * math.exp(-lmd*z)
 
 def lin_probability(params, z):
     """
     The probability of a coalescence at time z with linear population
 
-    Required parameters:
-      k  : sample size
-      N0 : population
-      b  : slope (> 0)
+    Parameters:
+      params : dictionary
+        k : sample size
+        N0 : population
+        b : slope (> 0)
+      z : time of occurence
     """
     k = params["k"]
     N0 = params["N0"]
@@ -98,10 +102,12 @@ def exp_probability(params, z):
     """
     The probability of a coalescence at time z with exponential population
 
-    Required parameters:
-      k  : sample size
-      N0 : population
-      r  : rate of change (> 0)
+    Parameters:
+      params : dictionary
+        k : sample size
+        N0 : population
+        r : rate of change (> 0)
+      z : time of occurence
     """
     k = params["k"]
     N0 = params["N0"]
@@ -118,10 +124,10 @@ def histogram(population, probability, params, replicates):
     Return the necessary data to plot a histogram of the probability of
     coalescence over time.
 
-    population  : function con_- lin_- or exp_population
+    population : function con_- lin_- or exp_population
     probability : function con_- lin_- or exp_probability
-    params      : dictionary of required parameters for population and probability
-    replicates  : integer (> 0)
+    params : dictionary of required parameters for population and probability
+    replicates : integer (> 0)
     """
     times = [time_until_next(population, params) for i in range(replicates)]
     x = np.linspace(0, max(times), 1000)

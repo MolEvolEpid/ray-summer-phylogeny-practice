@@ -9,7 +9,7 @@ rng = Generator(PCG64())
 
 def con_coalescence(nodes, population, params): # TODO expand with linear and exponential later
     # Time until coalescence occurs
-    scale = (2*params["N"]) / (params["k"]*(params["k"]-1))
+    scale = (2*params["N0"]) / (params["k"]*(params["k"]-1))
     coal_time = rng.exponential(scale=scale)
 
     # Add distance to all existing nodes to make sure they align
@@ -29,8 +29,7 @@ def con_coalescence(nodes, population, params): # TODO expand with linear and ex
 
     # Adjust the population size and k
     params["k"] -= 1
-    if "N0" in params:
-        params["N0"] = population(params, coal_time)
+    params["N0"] = population(params, coal_time)
 
     return nodes
 
@@ -48,5 +47,5 @@ def generate_tree(population, params):
     return nodes[0].write(format=1)
 
 if __name__ == "__main__":
-    params = {"N": 1000, "k": 20}
-    t = generate_tree(params)
+    params = {"N0": 1000, "k": 20}
+    t = generate_tree(con_population, params)

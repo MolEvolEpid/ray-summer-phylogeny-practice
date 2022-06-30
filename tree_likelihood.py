@@ -74,7 +74,7 @@ def tree_segments(tree):
 
     segments = []
     for start, end in zip(node_times, node_times[1:]):
-        segments.append((start, end-start))
+        segments.append((start, end, end-start))
     return segments
 
 #
@@ -90,15 +90,14 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
-    if "N0" in params:
-        params["N"] = params["N0"]
-    for (start, dist) in tree_segments(tree):
+    for (start, end, dist) in tree_segments(tree):
         params["k"] = count_lineages(tree, start)
         if params["k"] == 1:
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
-            branch_likelihood = np.log(probability(params, dist))
+            branch_likelihood = np.log(probability(params, end))
+            #print(f"lk {round(branch_likelihood, 3)} k {params['k']} dist {dist}")
             log_likelihood += branch_likelihood
         params["N"] = population(params, dist)
     return log_likelihood

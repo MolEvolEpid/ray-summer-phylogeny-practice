@@ -63,8 +63,7 @@ def count_lineages(tree, time):
 def tree_segments(tree):
     """
     Divide a tree into segments based on the location of parent
-    nodes. Each segment is a tuple (start dist), containing the
-    start time of a segment and how long it is in total.
+    nodes.
     """
     node_times = [0]
     for node in tree.traverse():
@@ -90,16 +89,17 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
+    if "N0" in params:
+        params["N"] = params["N0"]
     for (start, end, dist) in tree_segments(tree):
         params["k"] = count_lineages(tree, start)
         if params["k"] == 1:
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
-            branch_likelihood = np.log(probability(params, end))
-            print(f"k {params['k']}; dist {dist}; end {end}; lk {branch_likelihood}")
+            branch_likelihood = np.log(probability(params, dist)) #np.log(probability(params, dist))
             log_likelihood += branch_likelihood
-        params["N0"] = population(params, dist)
+        params["N"] = population(params, end-start)
     return log_likelihood
 
 #
@@ -112,12 +112,12 @@ def likelihood_surface(tree, population, probability, params):
     and one fixed parameter.
 
     Parameters:
+    pass
       tree        : TimeTree
       population  : con_- lin_- or exp_population
       probability : con_- lin_- or exp_probability
-      params      : dictionary with two entries
+      params      : dictionary with two items
                     one should be an iterable parameter and the other should be fixed
-                    names must correspond with model parameters
     """
     # Figure out what the parameters are
     # Will totally break if there is more than one iterable and one non-iterable
@@ -146,7 +146,7 @@ def confidence_intervals(likelihood_surface):
 if __name__ == "__main__":
     t = TimeTree(generate_tree(con_population, {"N0": 1000, "k": 20}))
     
-    test_params = {"N0": np.linspace(100, 10000, 1000), "fake": 1}
+    test_params = {"N0": np.linspace(100, 2000, 1000), "fake": 1}
     log_likelihood = likelihood_surface(t, con_population, con_probability, test_params)
     fig, ax = plt.subplots()
     ax.plot(test_params["N0"], log_likelihood)

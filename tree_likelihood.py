@@ -26,7 +26,7 @@ def within_tolerance(t1, t2):
     Return whether or not two times are close enough to each other
     to be counted as the same sampling group.
     """
-    return t1 - 0.003 <= t2 <= t1 + 0.003
+    return t1 - 0.3 <= t2 <= t1 + 0.3
 
 def sampling_groups(tree):
     """
@@ -97,9 +97,9 @@ def tree_likelihood(tree, population, probability, params):
             print("WARNING: k was 1")
         else:
             branch_likelihood = np.log(probability(params, end))
-            #print(f"lk {round(branch_likelihood, 3)} k {params['k']} dist {dist}")
+            print(f"k {params['k']}; dist {dist}; end {end}; lk {branch_likelihood}")
             log_likelihood += branch_likelihood
-        params["N"] = population(params, dist)
+        params["N0"] = population(params, dist)
     return log_likelihood
 
 #
@@ -112,12 +112,12 @@ def likelihood_surface(tree, population, probability, params):
     and one fixed parameter.
 
     Parameters:
-    pass
       tree        : TimeTree
       population  : con_- lin_- or exp_population
       probability : con_- lin_- or exp_probability
-      params      : dictionary with two items
+      params      : dictionary with two entries
                     one should be an iterable parameter and the other should be fixed
+                    names must correspond with model parameters
     """
     # Figure out what the parameters are
     # Will totally break if there is more than one iterable and one non-iterable
@@ -136,16 +136,34 @@ def likelihood_surface(tree, population, probability, params):
         print(f"parameter is now {r}")
         lk = tree_likelihood(tree, population, probability, \
                 {ranged_name: r, fixed_name: fixed})
+        print(f"  {lk}")
         likelihoods.append(lk)
     return likelihoods
 
+def confidence_intervals(likelihood_surface):
+    pass
+
 if __name__ == "__main__":
-    params = {"N0": np.linspace(8000, 12000, 1000), "b": 9}
-    with open("tree_files/linear.tre") as treefile:
-        line = treefile.readline()
-        t = TimeTree(line)
-        #t.show()
-        log_likelihood = likelihood_surface(t, lin_population, lin_probability, params)
-        likelihood = [np.exp(lk) for lk in log_likelihood]
-        plt.plot(params["N0"], likelihood)
-        plt.show()
+    t = TimeTree(generate_tree(con_population, {"N0": 1000, "k": 20}))
+    
+    test_params = {"N0": np.linspace(100, 10000, 1000), "fake": 1}
+    log_likelihood = likelihood_surface(t, con_population, con_probability, test_params)
+    fig, ax = plt.subplots()
+    ax.plot(test_params["N0"], log_likelihood)
+    plt.show()
+    """
+    with open("tree_files/linear_fixed.tre") as treefile:
+        for line in treefile.readlines():
+            t = TimeTree(line)
+            fig, ax = plt.subplots()
+
+            # nan-s out after a while
+            params1 = {"N0": 1500, "b": np.linspace(100, 10000, 21)}
+            linspace = likelihood_surface(t, lin_population, lin_probability, params1)
+            params2 = {"N0": 1500, "b": [100, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000]}
+            lst = likelihood_surface(t, lin_population, lin_probability, params2)
+            
+            ax.plot(params1["b"], linspace, color="red")
+            ax.plot(params2["b"], lst, color="blue")
+            plt.show()
+    """

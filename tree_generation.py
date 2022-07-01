@@ -39,7 +39,8 @@ def generate_tree(population, params):
 
     Required parameters:
       k
-      Any parameters required by probability (generally either N or N0 and another parameter)
+      N0
+      (sometimes) r or b
     """
     nodes = [TreeNode(dist=0, name=str(i)) for i in range(params["k"])]
     while len(nodes) > 1:
@@ -49,3 +50,4 @@ def generate_tree(population, params):
 if __name__ == "__main__":
     params = {"N0": 1000, "k": 20}
     t = generate_tree(con_population, params)
+    print(t)

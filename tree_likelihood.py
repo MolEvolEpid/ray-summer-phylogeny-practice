@@ -90,15 +90,17 @@ def tree_likelihood(tree, population, probability, params):
     print(f"\nparams {params}")
     for (start, end, dist) in tree_segments(tree):
         # Find the parameters "now" TODO is this actually right???
-        params["k"] = count_lineages(tree, start)
-        params["N0"] = population(params, start)
+        params["k"] = count_lineages(tree, dist)  # shouldn't it be `start`? it breaks ughhus
+        N0_new = population(params, start)
+        print(f"    changing pop from {params['N0']} to {N0_new}")
+        params["N0"] = N0_new
 
         if params["k"] == 1:
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
             segment_lk = np.log(probability(params, dist))
-            print(f"  k {params['k']} dist {round(dist, 4)} end {round(end, 4)} lk {round(segment_lk, 4)}")
+            print(f"  {params} {dist} {segment_lk}")
             log_likelihood += segment_lk
     print(f"result {log_likelihood}")
     return log_likelihood
@@ -140,10 +142,16 @@ def confidence_intervals(likelihood_surface):
     pass
 
 if __name__ == "__main__":
-    t = TimeTree(generate_tree(con_population, {"N0": 1000, "k": 20}))
+    #t = TimeTree(generate_tree(con_population, {"N0": 1000, "k": 20}))
+    t = TimeTree("linear.tre")
     
-    test_params = {"N0": np.linspace(100, 2000, 1000), "fake": 1}
-    log_likelihood = likelihood_surface(t, con_population, con_probability, test_params)
+    # b is supposed to be 1000 but it breaks everything. How is it even supposed to be 
+    # possible in the first place?
+    test_params = {"N0": np.linspace(500, 2000, 1000), "b": 1000}
+    log_lk = likelihood_surface(t, lin_population, lin_probability, test_params)
+    lk = [np.exp(l) for l in log_lk]
     fig, ax = plt.subplots()
-    ax.plot(test_params["N0"], log_likelihood)
+    ax.plot(test_params["N0"], log_lk)
+    print(tree_segments(t))
+    t.show()
     plt.show()

@@ -89,17 +89,17 @@ def tree_likelihood(tree, population, probability, params):
     log_likelihood = 0
     print(f"\nparams {params}")
     for (start, end, dist) in tree_segments(tree):
+        # Find the parameters "now" TODO is this actually right???
         params["k"] = count_lineages(tree, start)
+        params["N0"] = population(params, start)
+
         if params["k"] == 1:
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
-            segment_lk = np.log(probability(params, end))
+            segment_lk = np.log(probability(params, dist))
             print(f"  k {params['k']} dist {round(dist, 4)} end {round(end, 4)} lk {round(segment_lk, 4)}")
             log_likelihood += segment_lk
-
-        # Move population forward in time #TODO is this right?!
-        params["N0"] = population(params, dist)
     print(f"result {log_likelihood}")
     return log_likelihood
 

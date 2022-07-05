@@ -124,50 +124,65 @@ class TestTreeBoundaries(unittest.TestCase):
 
 class TestTreeLikelihood(unittest.TestCase):
 
+    def test_con_likelihood_basic(self):
+        t = TimeTree("((A:1, B:1):2, C:3);")
+        self.assertEqual(tree_likelihood(t, con_population, con_probability, {"N0": 20}),
+                -5.142852258439872)
+
     def test_con_likelihood_0(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, con_population, con_probability, {"N0": 1000}), \
-                -22.460064265038337)
+                -22.450864265038337)
 
     def test_con_likelihood_1(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, con_population, con_probability, {"N0": 2000}), \
-                -25.22165298727812)
+                -25.21705298727812)
 
     def test_con_likelihood_2(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, con_population, con_probability, {"N0": 10000}), \
-                -31.65060463701452)
+                -31.649684637014524)
+
+    def test_lin_likelihood_basic(self):
+        t = TimeTree("((A:1, B:1):2, C:3);")
+        self.assertEqual(tree_likelihood(t, lin_population, lin_probability, {"N0": 20, "b": 1}), \
+                -4.944145552827423)
 
     def test_lin_likelihood_0(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, lin_population, lin_probability, {"N0": 1000, "b": 10}), \
-                -22.354470250866278)
+                -22.358429151813432)
 
     def test_lin_likelihood_1(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, lin_population, lin_probability, {"N0": 2000, "b": 10}), \
-                -25.169260401486323)
+                -25.171199217855392)
 
     def test_lin_likelihood_2(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, lin_population, lin_probability, {"N0": 1000, "b": 20}), \
-                -22.244813025337052)
+                -22.262644483747312)
+
+    def test_exp_likelihood_basic(self):
+        t = TimeTree("((A:1, B:1):2, C:3);")
+        self.assertEqual(tree_likelihood(t, exp_population, exp_probability, {"N0": 20, "r": 0.1}), \
+                -4.768249652206723)
 
     def test_exp_likelihood_0(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, exp_population, exp_probability, {"N0": 1000, "r": 0.1}), \
-                -21.421468857062028)
+                -21.540268162312763)
 
     def test_exp_likelihood_1(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, exp_population, exp_probability, {"N0": 2000, "r": 0.1}), \
-                -24.184089802387195)
+                -24.308783956388865)
 
     def test_exp_likelihood_2(self):
         t = TimeTree("((A:1, B:1):2, ((C:0.7, D:0.7):1.3, E:2):1);")
         self.assertEqual(tree_likelihood(t, exp_population, exp_probability, {"N0": 1000, "r": 0.5}), \
-                -17.29493826236772)
+                -17.916859396867185)
 
 
 if __name__ == "__main__":

@@ -90,18 +90,21 @@ def tree_likelihood(tree, population, probability, params):
     print(f"params {params}")
     for (start, end, dist) in tree_segments(tree):
         # Find the parameters at the current step in time
-        k_new = count_lineages(tree, start) # WAIT DIST?!
-        N0_new = population(params, start)
-        print(f"    N0 {params['N0']} -> {N0_new} k {params.get('k', None)} -> {k_new}")
-        params["N0"] = N0_new # todo do we do these changes at the start, or the end...?
-        params["k"] = k_new
+        params_now = params.copy()
+        print(population)
+        print(start)
+        print(params)
+        #print(population(params, start))
+        params_now["k"] = count_lineages(tree, start)
+        params_now["N0"] = population(params, start)
 
-        if params["k"] == 1:
+        if params_now["k"] == 1:
             # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
-            segment_lk = np.log(probability(params, dist))
-            print(f"  {params} {dist} {segment_lk}")
+            segment_lk = np.log(probability(params_now, dist))
+            print(f"  {params_now} {segment_lk}")
+            print(f"    {start} {end} {dist}")
             log_likelihood += segment_lk
     print(f"result {log_likelihood}\n")
     return log_likelihood

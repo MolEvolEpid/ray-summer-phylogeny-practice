@@ -87,13 +87,14 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
-    print(f"\nparams {params}")
+    print(f"params {params}")
     for (start, end, dist) in tree_segments(tree):
-        # Find the parameters "now" TODO is this actually right???
-        params["k"] = count_lineages(tree, dist)  # shouldn't it be `start`? it breaks ughhus
+        # Find the parameters at the current step in time
+        k_new = count_lineages(tree, start) # WAIT DIST?!
         N0_new = population(params, start)
-        print(f"    changing pop from {params['N0']} to {N0_new}")
-        params["N0"] = N0_new
+        print(f"    N0 {params['N0']} -> {N0_new} k {params.get('k', None)} -> {k_new}")
+        params["N0"] = N0_new # todo do we do these changes at the start, or the end...?
+        params["k"] = k_new
 
         if params["k"] == 1:
             # TODO we actually need to handle this
@@ -102,7 +103,7 @@ def tree_likelihood(tree, population, probability, params):
             segment_lk = np.log(probability(params, dist))
             print(f"  {params} {dist} {segment_lk}")
             log_likelihood += segment_lk
-    print(f"result {log_likelihood}")
+    print(f"result {log_likelihood}\n")
     return log_likelihood
 
 #
@@ -147,7 +148,8 @@ if __name__ == "__main__":
     
     # b is supposed to be 1000 but it breaks everything. How is it even supposed to be 
     # possible in the first place?
-    test_params = {"N0": np.linspace(500, 2000, 1000), "b": 1000}
+    #test_params = {"N0": np.linspace(500, 2000, 1000), "b": 1000}
+    test_params = {"N0": np.linspace(1, 3000, 1000), "b": 0.000000001}
     log_lk = likelihood_surface(t, lin_population, lin_probability, test_params)
     lk = [np.exp(l) for l in log_lk]
     fig, ax = plt.subplots()

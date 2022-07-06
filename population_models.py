@@ -28,7 +28,7 @@ def lin_population(params, t):
     """
     N0 = params["N0"]
     b = params["b"]
-    return round(N0 - b*t)
+    return N0 - b*t
 
 def exp_population(params, t):
     """
@@ -40,7 +40,7 @@ def exp_population(params, t):
     """
     N0 = params["N0"]
     r = params["r"]
-    return round(N0 * np.exp(-r*t))
+    return N0 * np.exp(-r*t)
 
 def time_until_next(population, params):
     """

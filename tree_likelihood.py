@@ -199,7 +199,7 @@ if __name__ == "__main__":
     points, error = confidence_changing_k(k_range)
     fig, ax = plt.subplots()
     ax.errorbar(k_range, points, yerr=error, fmt='o')
-    #ax.set_xticklabels(k_range)
+    ax.set_xticks(k_range)
     ax.set_title("Likelihood of constant population trees, N0 = 1000")
     plt.show()
 

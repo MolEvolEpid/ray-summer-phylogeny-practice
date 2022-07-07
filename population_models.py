@@ -80,6 +80,8 @@ def con_probability(params, z):
     k = params["k"]
     N0 = params["N0"]
     lmd = k*(k - 1)/(2*N0)
+    if N0 <= 0:
+        return 0
     return lmd * math.exp(-lmd*z)
 
 def lin_probability(params, z):
@@ -96,6 +98,8 @@ def lin_probability(params, z):
     k = params["k"]
     N0 = params["N0"]
     b = params["b"]
+    if N0 <= 0:
+        return 0
     return (k*(k-1)/2) / (N0-b*z) * (N0 / (N0-b*z))**(-k*(k-1)/(2*b))
 
 def exp_probability(params, z):
@@ -112,6 +116,8 @@ def exp_probability(params, z):
     k = params["k"]
     N0 = params["N0"]
     r = params["r"]
+    if N0 <= 0:
+        return 0
     return k*(k-1)/2 * math.exp(r*z) / N0 * math.exp(-(k*(k-1)/2) * (math.exp(r*z) -1) / (r*N0))
 
 #

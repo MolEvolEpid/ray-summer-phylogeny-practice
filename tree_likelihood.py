@@ -5,6 +5,7 @@ import numpy as np
 from time_tree import TimeTree
 from tree_generation import generate_tree
 from scipy.optimize import minimize_scalar, brentq
+from arviz import hdi
 from population_models import con_probability, lin_probability, exp_probability, \
         con_population, lin_population, exp_population
 
@@ -147,58 +148,42 @@ def max_log_lk(tree):
     """
     fm = lambda x: -tree_likelihood(tree, con_population, con_probability, {"N0": x}) 
     #res = minimize_scalar(fm, method="brent")
-    res = minimize_scalar(fm, bounds=(100, 10000), method="bounded")
-    return res.x, -fm(res.x)
+    res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
+    return res.x
 
-def confidence_intervals(tree):
-    """
-    Return the 95% confidence intervals for a tree, along with its peak.
-    """
-    peak, peak_value = max_log_lk(tree)
-    # Weird function that has it roots at peak - 2
-    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_value + 2
-    # TODO I'm sure there's a better way to decide these bounds 
-    low_ci = brentq(fm, 1e-10, peak) # TODO this throws a log(0) error but doesn't seem to hurt the result
-    high_ci = brentq(fm, peak, 10*peak) 
-    return(peak, low_ci, high_ci)
+def error_stdev(peaks):
+    n = len(peaks)
+    mean = sum(peaks) / n
+    var = sum((x - mean)**2 for x in peaks) / n
+    stdev = var ** 0.5
+    return stdev # maybe [mean - stdev, mean + stdev]
 
-def batch_confidence_interval(params, replicates):
-    sum_peaks = 0
-    sum_lows = 0
-    sum_highs = 0
-    for i in range(replicates):
-        print(f"replicate {i} params {params}")
-        t = TimeTree(generate_tree(con_population, params))
-        peak, low, high = confidence_intervals(t)
-        sum_peaks += peak
-        sum_lows += low
-        sum_highs += high
+def error_hdi(peaks):
+    return hdi(peaks, hdi_prob=.95)
 
-    mean_peak = sum_peaks / replicates
-    mean_low = sum_lows / replicates
-    mean_high = sum_highs / replicates
+def error_fake(peaks):
+    return 3 # or maybe I should return [mean - 3, mean + 3]? I don't know
 
-    return mean_peak, mean_low, mean_high
-
-def confidence_changing_k(k_range):
-    points = []
-    low_error = []
-    high_error = []
+def changing_k(k_range, error_fun):
+    data = []
+    error = []
     for k in k_range:
         run_params = {"N0": 1000, "k": k}
-        print(f"trying with k {k} and params {run_params}")
-        peak, low, high = batch_confidence_interval(run_params, 150)
-        points.append(peak)
-        low_error.append(peak-low)
-        high_error.append(high-peak)
-    asymmetric_error = [low_error, high_error]
-    return points, asymmetric_error
+        rep_peaks = []
+        for _ in range(150):
+            t = TimeTree(generate_tree(con_population, run_params))
+            rep_peaks.append(max_log_lk(t))
+        data.append(sum(rep_peaks) / len(rep_peaks))
+        error.append(error_fun(rep_peaks))
+    return data, error
 
 if __name__ == "__main__":
     k_range = [5, 10, 20, 40, 60]
-    points, error = confidence_changing_k(k_range)
+    error_fun = error_fake
+    data, error = changing_k(k_range, error_fun)
+    
     fig, ax = plt.subplots()
-    ax.errorbar(k_range, points, yerr=error, fmt='o')
+    ax.errorbar(k_range, data, yerr=error, fmt='o')
     ax.set_xticks(k_range)
     ax.set_title("Likelihood of constant population trees, N0 = 1000")
     plt.show()

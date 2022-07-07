@@ -16,7 +16,7 @@ def within_tolerance(t1, t2):
     Return whether or not two times are close enough to each other
     to be counted as the same sampling group.
     """
-    return t1 - 0.03 <= t2 <= t1 + 0.03
+    return t1 - 0.003 <= t2 <= t1 + 0.003
 
 def closest_parent_node(tree, time):
     """
@@ -87,14 +87,9 @@ def tree_likelihood(tree, population, probability, params):
       Any parameters the probability requires besides k
     """
     log_likelihood = 0
-    print(f"params {params}")
     for (start, end, dist) in tree_segments(tree):
         # Find the parameters at the current step in time
         params_now = params.copy()
-        print(population)
-        print(start)
-        print(params)
-        #print(population(params, start))
         params_now["k"] = count_lineages(tree, start)
         params_now["N0"] = population(params, start)
 
@@ -103,10 +98,7 @@ def tree_likelihood(tree, population, probability, params):
             print("WARNING: k was 1")
         else:
             segment_lk = np.log(probability(params_now, dist))
-            print(f"  {params_now} {segment_lk}")
-            print(f"    {start} {end} {dist}")
             log_likelihood += segment_lk
-    print(f"result {log_likelihood}\n")
     return log_likelihood
 
 #

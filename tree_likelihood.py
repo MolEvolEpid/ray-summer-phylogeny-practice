@@ -135,12 +135,18 @@ def likelihood_surface(tree, population, probability, params):
         {ranged_name: r, fixed_name: fixed}) for r in ranged]
     return likelihoods
 
+#
+# Finding max value and confidence intervals based on the probability
+# function of a certain tree
+#
+
 def max_log_lk(tree):
     """
     Maximize the log likelihood for a tree by manipulating N0. Can only be used
     for constant model, so I've hardcoded that in for now.
     """
     fm = lambda x: -tree_likelihood(tree, con_population, con_probability, {"N0": x}) 
+    #res = minimize_scalar(fm, method="brent")
     res = minimize_scalar(fm, bounds=(100, 10000), method="bounded")
     return res.x, -fm(res.x)
 
@@ -153,11 +159,48 @@ def confidence_intervals(tree):
     fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_value + 2
     # TODO I'm sure there's a better way to decide these bounds 
     low_ci = brentq(fm, 1e-10, peak) # TODO this throws a log(0) error but doesn't seem to hurt the result
-    high_ci = brentq(fm, peak, 2*peak) 
-    return((peak, low_ci, high_ci))
+    high_ci = brentq(fm, peak, 10*peak) 
+    return(peak, low_ci, high_ci)
+
+def batch_confidence_interval(params, replicates):
+    sum_peaks = 0
+    sum_lows = 0
+    sum_highs = 0
+    for i in range(replicates):
+        print(f"replicate {i} params {params}")
+        t = TimeTree(generate_tree(con_population, params))
+        peak, low, high = confidence_intervals(t)
+        sum_peaks += peak
+        sum_lows += low
+        sum_highs += high
+
+    mean_peak = sum_peaks / replicates
+    mean_low = sum_lows / replicates
+    mean_high = sum_highs / replicates
+
+    return mean_peak, mean_low, mean_high
+
+def confidence_changing_k(k_range):
+    points = []
+    low_error = []
+    high_error = []
+    for k in k_range:
+        run_params = {"N0": 1000, "k": k}
+        print(f"trying with k {k} and params {run_params}")
+        peak, low, high = batch_confidence_interval(run_params, 150)
+        points.append(peak)
+        low_error.append(peak-low)
+        high_error.append(high-peak)
+    asymmetric_error = [low_error, high_error]
+    return points, asymmetric_error
 
 if __name__ == "__main__":
-    t = TimeTree("tmp.tmp")
-    #t = TimeTree("linear.tre")
-    (peak, low_ci, high_ci) = confidence_intervals(t)
-    print(f"low {low_ci} peak {peak} high {high_ci}")
+    k_range = [5, 10, 20, 40, 60]
+    points, error = confidence_changing_k(k_range)
+    fig, ax = plt.subplots()
+    ax.errorbar(k_range, points, yerr=error, fmt='o')
+    #ax.set_xticklabels(k_range)
+    ax.set_title("Likelihood of constant population trees, N0 = 1000")
+    plt.show()
+
+

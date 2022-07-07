@@ -47,9 +47,10 @@ def generate_tree(population, params):
       N0
       (sometimes) r or b
     """
-    nodes = [TreeNode(dist=0, name=str(i)) for i in range(params["k"])]
+    run_params = params.copy() # Create a single use copy in case we run multiple times
+    nodes = [TreeNode(dist=0, name=str(i)) for i in range(run_params["k"])]
     while len(nodes) > 1:
-        nodes = coalescence(nodes, population, params)
+        nodes = coalescence(nodes, population, run_params)
     return nodes[0].write(format=1)
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from time_tree import TimeTree
 from tree_generation import generate_tree
+from scipy.optimize import minimize_scalar, brentq
 from population_models import con_probability, lin_probability, exp_probability, \
         con_population, lin_population, exp_population
 
@@ -134,21 +135,29 @@ def likelihood_surface(tree, population, probability, params):
         {ranged_name: r, fixed_name: fixed}) for r in ranged]
     return likelihoods
 
-def confidence_intervals(likelihood_surface):
-    pass
+def max_log_lk(tree):
+    """
+    Maximize the log likelihood for a tree by manipulating N0. Can only be used
+    for constant model, so I've hardcoded that in for now.
+    """
+    fm = lambda x: -tree_likelihood(tree, con_population, con_probability, {"N0": x}) 
+    res = minimize_scalar(fm, bounds=(100, 10000), method="bounded")
+    return res.x, -fm(res.x)
+
+def confidence_intervals(tree):
+    """
+    Return the 95% confidence intervals for a tree, along with its peak.
+    """
+    peak, peak_value = max_log_lk(tree)
+    # Weird function that has it roots at peak - 2
+    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_value + 2
+    # TODO I'm sure there's a better way to decide these bounds 
+    low_ci = brentq(fm, 1e-10, peak) # TODO this throws a log(0) error but doesn't seem to hurt the result
+    high_ci = brentq(fm, peak, 2*peak) 
+    return((peak, low_ci, high_ci))
 
 if __name__ == "__main__":
-    #t = TimeTree(generate_tree(con_population, {"N0": 1000, "k": 20}))
-    t = TimeTree("linear.tre")
-    
-    # b is supposed to be 1000 but it breaks everything. How is it even supposed to be 
-    # possible in the first place?
-    #test_params = {"N0": np.linspace(500, 2000, 1000), "b": 1000}
-    test_params = {"N0": np.linspace(1, 3000, 1000), "b": 0.000000001}
-    log_lk = likelihood_surface(t, lin_population, lin_probability, test_params)
-    lk = [np.exp(l) for l in log_lk]
-    fig, ax = plt.subplots()
-    ax.plot(test_params["N0"], log_lk)
-    print(tree_segments(t))
-    t.show()
-    plt.show()
+    t = TimeTree("tmp.tmp")
+    #t = TimeTree("linear.tre")
+    (peak, low_ci, high_ci) = confidence_intervals(t)
+    print(f"low {low_ci} peak {peak} high {high_ci}")

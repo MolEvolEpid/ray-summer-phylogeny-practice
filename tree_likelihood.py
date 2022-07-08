@@ -223,31 +223,50 @@ def error_listdrop(peaks):
     trimmed = peaks[to_drop:-to_drop]
     return np.array([mean - trimmed[0], trimmed[-1] - mean])
 
-def calculate_statistics(data, error_fun):
+def calculate_axes(data):
     """
-    Prepare data for plotting by finding the mean value of each k
-    and error as specified by an error function.
+    Turn a data dictionary into two lists -- one of k values,
+    the other of mean peak positions.
     """
     k_values = []
     est_population = []
-    error = []
     for k, peaks in data.items():
         k_values.append(k)
         est_population.append(sum(peaks) / len(peaks))
+    return k_values, est_population
+
+def calculate_error(data, error_fun):
+    """
+    Turn a data dictionary into a list of errors using the specified
+    error_fun.
+    """
+    error = []
+    for peaks in data.values():
         error.append(error_fun(peaks))
     error_array = np.array(error)
-    return k_values, est_population, error_array
+    return np.transpose(error_array) # Matplotlib requires shape (2, N), these are (N, 2) how I made them
 
 def main():
-    data = read_datafile("run.csv")
+    data = read_datafile("larger_run.csv")
     
-    x, y, error = calculate_statistics(data, error_stdev)
+    x, y = calculate_axes(data)
+    stdev = calculate_error(data, error_stdev)
+    hdi = calculate_error(data, error_hdi)
+    listdrop = calculate_error(data, error_listdrop)
 
     fig, ax = plt.subplots()
-    ax.errorbar(x, y, yerr=error, fmt='o')
-    #ax.set_xscale('log')
+    ax.scatter(x, y, color="#003049", zorder=3)
+    ax.errorbar(x, y, yerr=stdev, fmt="none", color="#D62828", label="stdev", capsize=5, zorder=2)
+    ax.errorbar(x, y, yerr=hdi, fmt="none", color="#F77F00", label="hdi", capsize=5, zorder=1)
+    ax.errorbar(x, y, yerr=listdrop, fmt="none", color="#FCBA36", label="listdrop", capsize=5, zorder=0)
+    ax.axhline(y=1000, color="#4DA1A9", linestyle="-", zorder=3)
+
     ax.set_xticks(x)
-    ax.set_title("Likelihood of constant population trees, N0 = 1000")
+    ax.set_title("Population prediction on constant-population trees (N=1000)")
+    ax.set_xlabel("Value of k")
+    ax.set_ylabel("Predicted population")
+    ax.legend()
+
     plt.show()
 
 if __name__ == "__main__":

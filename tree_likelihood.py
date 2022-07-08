@@ -11,55 +11,8 @@ from population_models import con_probability, lin_probability, exp_probability,
         con_population, lin_population, exp_population
 
 #
-# Breaking a tree into parts and finding k
+# Log likelihood of an entire tree
 #
-
-def within_tolerance(t1, t2):
-    """
-    Return whether or not two times are close enough to each other
-    to be counted as the same sampling group.
-    """
-    return t1 - 0.003 <= t2 <= t1 + 0.003
-
-def closest_parent_node(tree, time):
-    """
-    Return the next parent node back from the specified time.
-    """
-    closest = tree
-    for node in tree.traverse():
-        if node.time < closest.time and node.time > time and node.children:
-            closest = node
-    return closest
-
-def sampling_groups(tree):
-    """
-    Organize the leaves of a tree by groups sampled at approximately
-    the same time to avoid issues with floating point precision.
-    """
-    groups = []
-    for leaf in tree.iter_leaves():
-        for group in groups:
-            if within_tolerance(group[0].time, leaf.time):
-                group.append(leaf)
-                break
-        # If the leaf isn't in any groups, add it to a new one
-        if not any(leaf in group for group in groups):
-            groups.append([leaf])
-    return groups
-
-def count_lineages(tree, time):
-    """
-    Return the number of nodes at a certain time,
-    accounting for sampling groups.
-    """
-    if time > tree.time:
-        raise Exception("Time must be after the tree time")
-    for group in sampling_groups(tree):
-        if within_tolerance(group[0].time, time):
-            # TODO this won't hold up if we have more than one group since we should
-            # also add anything else that exists at the time
-            return len(group)
-    return len([n for n in tree.iter_descendants() if n.time <= time < n.up.time])
 
 def tree_segments(tree):
     """
@@ -77,31 +30,24 @@ def tree_segments(tree):
         segments.append((start, end, end-start))
     return segments
 
-#
-# Log likelihood of an entire tree
-#
-
 def tree_likelihood(tree, population, probability, params):
     """
-    Return the log likelihood of a certain tree existing
-    based on the given population model and probability function.
-
-    Required parameters:
-      Any parameters the probability requires besides k
+    Return the log likelihood of a tree existing based
+    on the given population model and probability function.
     """
     log_likelihood = 0
+    params_now = params.copy()
+    params_now["k"] = len(tree.get_leaves()) # TODO later will need to by by group
     for (start, end, dist) in tree_segments(tree):
-        # Find the parameters at the current step in time
-        params_now = params.copy()
-        params_now["k"] = count_lineages(tree, start)
         params_now["N0"] = population(params, start)
-
         if params_now["k"] == 1:
-            # TODO we actually need to handle this
             print("WARNING: k was 1")
         else:
+            print(f"trying with {params_now}, {dist}")
             segment_lk = np.log(probability(params_now, dist))
+            print(f"    {segment_lk}")
             log_likelihood += segment_lk
+        params_now["k"] -= 1
     return log_likelihood
 
 #

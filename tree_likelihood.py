@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import csv
 from time_tree import TimeTree
 from tree_generation import generate_tree
 from scipy.optimize import minimize_scalar, brentq
@@ -151,6 +152,46 @@ def max_log_lk(tree):
     res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
     return res.x
 
+def generate_datapoints(k_range, replicates=100, outfile=None):
+    """
+    Generate trees using the parameters provided, returning a dict
+    of the parameters tested or writing the data to a CSV file.
+    """
+    data = {}
+    for k in k_range:
+        print(f"\n\nNEW K SELECTED: {k}")
+        run_params = {"N0": 1000, "k": k}
+        rep_peaks = []
+        for _ in range(replicates):
+            print(f"  replicate {_}")
+            t = TimeTree(generate_tree(con_population, run_params))
+            rep_peaks.append(max_log_lk(t))
+        data[k] = rep_peaks
+
+    if outfile:
+        with open(outfile, "w", newline="") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=["k", "peak_data"])
+            writer.writeheader()
+            for key, value in data.items():
+                writer.writerow({"k": key, "peak_data": value})
+    else:
+        return data
+
+def read_datafile(infile):
+    """
+    Read data from a file containing k and peaks information 
+    and return a dictionary.
+    """
+    data = {}
+    with open(infile, newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Turn strings back into the types of data we want
+            k = int(row["k"])
+            peaks = [float(peak) for peak in row["peak_data"].strip('][').split(', ')]
+            data[k] = peaks
+    return data
+
 def error_stdev(peaks):
     n = len(peaks)
     mean = sum(peaks) / n
@@ -164,27 +205,29 @@ def error_hdi(peaks):
 def error_fake(peaks):
     return 3 # or maybe I should return [mean - 3, mean + 3]? I don't know
 
-def changing_k(k_range, error_fun):
-    data = []
+def calculate_statistics(data, error_fun):
+    """
+    Prepare data for plotting by finding the mean value of each k
+    and error as specified by an error function.
+    """
+    k_values = []
+    est_population = []
     error = []
-    for k in k_range:
-        run_params = {"N0": 1000, "k": k}
-        rep_peaks = []
-        for _ in range(150):
-            t = TimeTree(generate_tree(con_population, run_params))
-            rep_peaks.append(max_log_lk(t))
-        data.append(sum(rep_peaks) / len(rep_peaks))
-        error.append(error_fun(rep_peaks))
-    return data, error
+    for k, peaks in data.items():
+        k_values.append(k)
+        est_population.append(sum(peaks) / len(peaks))
+        error.append(error_fun(peaks))
+    return k_values, est_population, error
 
 if __name__ == "__main__":
-    k_range = [5, 10, 20, 40, 60]
-    error_fun = error_fake
-    data, error = changing_k(k_range, error_fun)
+    data = read_datafile("run.csv")
     
+    x, y, error = calculate_statistics(data, error_stdev)
+
     fig, ax = plt.subplots()
-    ax.errorbar(k_range, data, yerr=error, fmt='o')
-    ax.set_xticks(k_range)
+    ax.errorbar(x, y, yerr=error, fmt='o')
+    #ax.set_xscale('log')
+    ax.set_xticks(x)
     ax.set_title("Likelihood of constant population trees, N0 = 1000")
     plt.show()
 

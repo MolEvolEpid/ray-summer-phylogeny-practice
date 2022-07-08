@@ -105,7 +105,7 @@ def tree_likelihood(tree, population, probability, params):
     return log_likelihood
 
 #
-# Find most likely parameter of a tree by trying many possible values and choosing the best
+# Find most likely parameter of a tree
 #
 
 def likelihood_surface(tree, population, probability, params):
@@ -137,11 +137,6 @@ def likelihood_surface(tree, population, probability, params):
         {ranged_name: r, fixed_name: fixed}) for r in ranged]
     return likelihoods
 
-#
-# Finding max value and confidence intervals based on the probability
-# function of a certain tree
-#
-
 def max_log_lk(tree):
     """
     Maximize the log likelihood for a tree by manipulating N0. Can only be used
@@ -152,7 +147,11 @@ def max_log_lk(tree):
     res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
     return res.x
 
-def generate_datapoints(k_range, replicates=100, outfile=None):
+#
+# Input and output data files since these models can take a while to run
+#
+
+def generate_data(k_range, replicates=100, outfile=None):
     """
     Generate trees using the parameters provided, returning a dict
     of the parameters tested or writing the data to a CSV file.
@@ -191,6 +190,10 @@ def read_datafile(infile):
             peaks = [float(peak) for peak in row["peak_data"].strip('][').split(', ')]
             data[k] = peaks
     return data
+
+#
+# Calculate the error between peak measurements in various ways
+#
 
 def error_stdev(peaks):
     """
@@ -244,16 +247,24 @@ def calculate_error(data, error_fun):
     for peaks in data.values():
         error.append(error_fun(peaks))
     error_array = np.array(error)
-    return np.transpose(error_array) # Matplotlib requires shape (2, N), these are (N, 2) how I made them
+    return np.transpose(error_array)
 
-def main():
-    data = read_datafile("larger_run.csv")
+#
+# Plot a nice-ish graph with all three different types of error
+#
+
+def plot_all_errors():
+    # Data should already be generated
+    # Uncomment line in __main__ below to generate it
+    data = read_datafile("run.csv")
     
+    # Find points and error
     x, y = calculate_axes(data)
     stdev = calculate_error(data, error_stdev)
     hdi = calculate_error(data, error_hdi)
     listdrop = calculate_error(data, error_listdrop)
 
+    # Plot and label all of them
     fig, ax = plt.subplots()
     ax.scatter(x, y, color="#003049", zorder=3)
     ax.errorbar(x, y, yerr=stdev, fmt="none", color="#D62828", label="stdev", capsize=5, zorder=2)
@@ -261,6 +272,7 @@ def main():
     ax.errorbar(x, y, yerr=listdrop, fmt="none", color="#FCBA36", label="listdrop", capsize=5, zorder=0)
     ax.axhline(y=1000, color="#4DA1A9", linestyle="-", zorder=3)
 
+    # Labeling
     ax.set_xticks(x)
     ax.set_title("Population prediction on constant-population trees (N=1000)")
     ax.set_xlabel("Value of k")
@@ -270,4 +282,5 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-    main()
+    #generate_data([5, 10, 20, 40, 60, 80, 100], outfile="run.csv", replicates=200)
+    plot_all_errors()

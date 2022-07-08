@@ -7,47 +7,51 @@ from population_models import *
 
 class TestPopulation(unittest.TestCase):
     
-    def test_con_zero(self):
+    def test_con_pop_timezero(self):
         self.assertEqual(con_population({"N0": 1000}, 0), 1000)
 
-    def test_con_nonzero(self):
+    def test_con_pop_timenonzero(self):
         self.assertEqual(con_population({"N0": 1000}, 20), 1000)
 
-    def test_lin_zero(self):
+    def test_lin_pop_timezero(self):
         self.assertEqual(lin_population({"N0": 1000, "b": 20}, 0), 1000)
 
-    def test_lin_nonzero(self):
+    def test_lin_pop_timenonzero(self):
         self.assertEqual(lin_population({"N0": 1000, "b": 20}, 5), 900)
 
-    def test_exp_zero(self):
+    def test_exp_pop_timezero(self):
         self.assertEqual(exp_population({"N0": 1000, "r": 0.2}, 0), 1000)
 
-    def test_exp_nonzero(self):
+    def test_exp_pop_timenonzero(self):
         self.assertEqual(exp_population({"N0": 1000, "r": 0.2}, 5), 367.87944117144235)
 
 class TestProbability(unittest.TestCase):
 
-    def test_timezero(self):
+    def test_all_prob_timezero(self):
         self.assertEqual(con_probability({"N0": 1000, "k": 20}, 0), 0.19)
-        self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0), 0.19)
-        self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 0), 0.19)
 
-    def test_con_timesmall(self):
+    def test_con_prob_timesmall(self):
         self.assertEqual(con_probability({"N0": 1000, "k": 20}, 0.123), 0.18561118307253321)
 
-    def test_con_timelarge(self):
+    def test_con_prob_timelarge(self):
         self.assertEqual(con_probability({"N0": 1000, "k": 20}, 123.456), 1.2349923998740305e-11)
 
-    def test_lin_timesmall(self):
+    def test_lin_prob_timezero(self):
+        self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0), 0.19)
+
+    def test_lin_prob_timesmall(self):
         self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0.123), 0.1857240689796149)
 
-    def test_lin_timelarge(self):
+    def test_lin_prob_timelarge(self):
         self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 123.456), 7.004166250572144e-17)
 
-    def test_exp_timesmall(self):
+    def test_exp_prob_timezero(self):
+        self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 0), 0.19)
+
+    def test_exp_prob_timesmall(self):
         self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 0.123), 0.1878811825975959)
 
-    def test_exp_timelarge(self):
+    def test_exp_prob_timelarge(self):
         self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 12.345), 0.006371726862993659)
 
 #
@@ -72,12 +76,31 @@ class TestTimeTree(unittest.TestCase):
 #
 from tree_likelihood import *
 
-class TestTreeBoundaries(unittest.TestCase):
+class TestTreeSegments(unittest.TestCase):
 
-    def test_nothing(self):
-        self.assertEqual(1, 1)
+    def test_num_segments_simple_aligned(self):
+        t = TimeTree("((A:1, B:1):2, C:3);")
+        self.assertEqual(len(tree_segments(t)), 2)
 
-    # TODO I need to have tests for tree segments
+    def test_num_segments_complex_aligned(self):
+        t = TimeTree("((((A:1.5, B:1.5):1.5, C:3):1.5, (D:1, E:1):3.5):0.5, F:5);")
+        self.assertEqual(len(tree_segments(t)), 5)
+
+    def test_num_segments_unaligned(self):
+        pass # TODO Code's not ready for this yet, but I should write them
+
+    def test_segment_bounds_simple_aligned(self):
+        t = TimeTree("((A:1, B:1):2, C:3);")
+        expected = [(0, 1.0, 1.0), (1.0, 3.0, 2.0)]
+        self.assertEqual(tree_segments(t), expected)
+
+    def test_segment_bounds_complex_aligned(self):
+        t = TimeTree("((((A:1.5, B:1.5):1.5, C:3):1.5, (D:1, E:1):3.5):0.5, F:5);")
+        expected = [(0, 1.0, 1.0), (1.0, 1.5, 0.5), (1.5, 3.0, 1.5), (3.0, 4.5, 1.5), (4.5, 5.0, 0.5)]
+        self.assertEqual(tree_segments(t), expected)
+
+    def test_segment_bounds_unaligned(self):
+        pass
 
 class TestTreeLikelihood(unittest.TestCase):
 

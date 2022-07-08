@@ -193,17 +193,35 @@ def read_datafile(infile):
     return data
 
 def error_stdev(peaks):
+    """
+    Find the standard deviation among the peaks and
+    return it as symmetrical error.
+    """
     n = len(peaks)
     mean = sum(peaks) / n
     var = sum((x - mean)**2 for x in peaks) / n
-    stdev = var ** 0.5
-    return stdev # maybe [mean - stdev, mean + stdev]
+    return 1.96 * var ** 0.5
 
 def error_hdi(peaks):
-    return hdi(peaks, hdi_prob=.95)
+    """
+    Find the HDI (highest density interval) among the peaks
+    and return it. Error may be asymmetrical.
+    """
+    low, high = hdi(np.array(peaks), hdi_prob=.95)
+    mean = sum(peaks) / len(peaks)
+    return np.array([mean - low, high - mean])
 
-def error_fake(peaks):
-    return 3 # or maybe I should return [mean - 3, mean + 3]? I don't know
+def error_listdrop(peaks):
+    """
+    Find a bootleg version of the HDI by sorting the list of peaks
+    and dropping the first and last 2.5% of the items (rounded).
+    Error can be asymmetrical, but is not necessarily
+    """
+    to_drop = round(.025 * len(peaks))
+    peaks.sort()
+    mean = sum(peaks) / len(peaks)
+    trimmed = peaks[to_drop:-to_drop]
+    return np.array([mean - trimmed[0], trimmed[-1] - mean])
 
 def calculate_statistics(data, error_fun):
     """
@@ -217,9 +235,10 @@ def calculate_statistics(data, error_fun):
         k_values.append(k)
         est_population.append(sum(peaks) / len(peaks))
         error.append(error_fun(peaks))
-    return k_values, est_population, error
+    error_array = np.array(error)
+    return k_values, est_population, error_array
 
-if __name__ == "__main__":
+def main():
     data = read_datafile("run.csv")
     
     x, y, error = calculate_statistics(data, error_stdev)
@@ -231,4 +250,5 @@ if __name__ == "__main__":
     ax.set_title("Likelihood of constant population trees, N0 = 1000")
     plt.show()
 
-
+if __name__ == "__main__":
+    main()

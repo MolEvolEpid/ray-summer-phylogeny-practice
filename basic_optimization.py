@@ -14,7 +14,7 @@ from population_models import con_probability, con_population, \
                               exp_probability, exp_population
 
 #
-# Find max with an optimization tool
+# Find info about a single tree (peak, confidence interval width)
 #
 
 def max_log_lk(tree):
@@ -23,38 +23,67 @@ def max_log_lk(tree):
     for constant model, so I've hardcoded that in for now.
     """
     fm = lambda x: -tree_likelihood(tree, con_population, con_probability, {"N0": x}) 
-    #res = minimize_scalar(fm, method="brent")
     res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
     return res.x
+
+def confidence_width(tree, peak_pos):
+    """
+    Return the width of the 95% confidence interval of a tree,
+    given the value of the peak likelihood.
+    """
+    peak_val = tree_likelihood(tree, con_population, con_probability, {"N0": peak_pos})
+    
+    # A function that has its roots at peak - 2 so I can find the roots
+    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
+
+    low_ci = brentq(fm, 1e-10, peak)
+    high_ci = brentq(fm, peak, 100*peak)
+    return high_ci - low_ci
 
 #
 # Input and output data files since these models can take a while to run
 #
 
-def generate_data(k_range, replicates=100, outfile=None):
+def data_from_trees(infile, outfile=None):
+    """
+    Pull trees from a tree file and generate data from them,
+    but also keep track of all the trees this time. 
+    """
+    out_trees = []
+    out_data = {}
+    with open(infile) as treefile:
+        trees = treefile.readlines()
+        for tree in trees:
+            # add the trees to 
+
+def generate_data(k_range, replicates=100, data_outfile=None, tree_outfile=None):
     """
     Generate trees using the parameters provided, returning a dict
     of the parameters tested or writing the data to a CSV file.
     """
-    data = {}
+    # Generate a bunch of trees and extract their data
+    data_out = {}
+    tree_out = {}
     for k in k_range:
         print(f"\n\nNEW K SELECTED: {k}")
         run_params = {"N0": 1000, "k": k}
-        rep_peaks = []
+        data_out[k] = []
+        tree_out[k] = []
         for _ in range(replicates):
             print(f"  replicate {_}")
             t = TimeTree(generate_tree(con_population, run_params))
-            rep_peaks.append(max_log_lk(t))
-        data[k] = rep_peaks
+            data_out[k].append(max_log_lk(t))
+            tree_out[k].append(t.write())
 
-    if outfile:
-        with open(outfile, "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=["k", "peak_data"])
-            writer.writeheader()
-            for key, value in data.items():
-                writer.writerow({"k": key, "peak_data": value})
-    else:
-        return data
+    # Write to either or both of the outfiles 
+    for outfile, data_title in zip([data_out, tree_out], ["peaks", "trees"]):
+        if outfile:
+            with open(outfile, "w", newline="") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=["k", data_title])
+                writer.writeheader()
+                for key, value in outfile.items():
+                    writer.writerow({"k": key, "peaks": value})
+    return data, trees
 
 def read_datafile(infile):
     """
@@ -160,6 +189,20 @@ def plot_all_errors():
     ax.legend()
 
     plt.show()
+
+def plot_error_vs_width():
+    data = read_datafile("run.csv")
+
+    # Find error using HDI method (to simplify)
+    hdi = calculate_error(data, error_hdi)
+    print(hdi)
+    for down, up in hdi:
+        print([down, up])
+        print(down+up / 2)
+
+    # Find the average width for each...tree???
+
+
 
 if __name__ == "__main__":
     #generate_data([5, 10, 20, 40, 60, 80, 100], outfile="run.csv", replicates=200)

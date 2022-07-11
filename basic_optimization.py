@@ -6,7 +6,7 @@ import csv
 from time_tree import TimeTree
 from tree_likelihood import tree_likelihood
 from tree_generation import generate_tree
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize_scalar, brentq
 from arviz import hdi
 # TODO I eventually wanna support lin and exp too, but I can only generate con right now.
 from population_models import con_probability, con_population, \
@@ -36,51 +36,56 @@ def confidence_width(tree, peak_pos):
     # A function that has its roots at peak - 2 so I can find the roots
     fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
 
-    low_ci = brentq(fm, 1e-10, peak)
-    high_ci = brentq(fm, peak, 100*peak)
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
     return high_ci - low_ci
 
 #
 # Input and output data files since these models can take a while to run
 #
 
-def generate_data(k_range, replicates=100, data_outfile=None, tree_outfile=None):
+def write_datafiles(k_range, replicates=100, peak_outfile=None, width_outfile=None):
     """
-    Generate trees using the parameters provided, returning a dict
-    of the parameters tested or writing the data to a CSV file.
+    Generate trees using the parameters provided, writing the peaks and 
+    confidence intervals of the tree to the specified output files.
     """
     # Generate a bunch of trees and extract their data
-    data_out = {}
-    tree_out = {}
+    peaks_out = {}
+    widths_out = {}
     for k in k_range:
         print(f"\n\nNEW K SELECTED: {k}")
         run_params = {"N0": 1000, "k": k}
-        data_out[k] = []
-        tree_out[k] = []
+        peaks_out[k] = []
+        widths_out[k] = []
         for _ in range(replicates):
             print(f"  replicate {_}")
             t = TimeTree(generate_tree(con_population, run_params))
-            data_out[k].append(max_log_lk(t))
-            tree_out[k].append(t.write())
+            peak_pos = max_log_lk(t)
+            peaks_out[k].append(peak_pos)
+            widths_out[k].append(confidence_width(t, peak_pos))
 
     # Write to either or both of the outfiles 
-    for outfile, dictionary, data_title in zip([data_outfile, tree_outfile], [data_out, tree_out], ["peaks", "trees"]):
+    for outfile, dictionary, data_title in zip([peak_outfile, width_outfile], 
+                                               [peaks_out, widths_out], 
+                                               ["peaks", "widths"]):
         if outfile:
             with open(outfile, "w") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=["k", data_title])
                 writer.writeheader()
-                for key, value in dictionary.items():
-                    writer.writerow({"k": key, data_title: value})
-    return data_out, tree_out
+                for k, values in dictionary.items(): 
+                    writer.writerow({"k": k, data_title: values})
 
-def read_datafiles(data_infile=None, tree_infile=None):
+def read_datafiles(peak_infile=None, width_infile=None):
     """
-    Read data and trees from two files, returning a dictionary for each of them.
+    Read data and trees from up to two files, returning a dictionary for each of them.
+    If only one file is specified, only one dictionary will be returned.
     """
-    data = {}
-    trees = {}
+    if not peak_infile and width_infile:
+        raise Exception("You must specify at least one file to be read.")
+    peaks = {}
+    widths = {}
     string_to_list = lambda s: s.strip('][').split(', ')
-    for infile, dictionary in zip([data_infile, tree_infile], [data, trees]):
+    for infile, dictionary in zip([peak_infile, width_infile], [peaks, widths]):
         if infile:
             with open(infile) as csvfile:
                 reader = csv.DictReader(csvfile)
@@ -89,9 +94,9 @@ def read_datafiles(data_infile=None, tree_infile=None):
                     try:
                         data_row = [float(peak) for peak in string_to_list(row["peaks"])]
                     except KeyError: # no column titled "peaks"
-                        data_row = [tree.strip("'") for tree in string_to_list(row["trees"])]
+                        data_row = [float(width) for width in string_to_list(row["widths"])]
                     dictionary[k] = data_row
-    return data, trees
+    return peaks, widths
 
 #
 # Calculate the error between peak measurements in various ways
@@ -198,5 +203,7 @@ def plot_error_vs_width():
 
 
 if __name__ == "__main__":
-    #generate_data([5, 10, 20, 40, 60, 80, 100], data_outfile="run/peaks.csv", tree_outfile="run/trees.csv", replicates=200)
-    plot_all_errors()
+    #write_datafiles([5, 10, 20, 40, 60, 80, 100], peak_outfile="run/peaks.csv", width_outfile="run/widths.csv", replicates=200)
+    peaks, widths = read_datafiles(peak_infile="run/peaks.csv", width_infile="run/widths.csv")
+
+    #plot_all_errors()

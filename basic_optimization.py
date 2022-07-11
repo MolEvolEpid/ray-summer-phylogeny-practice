@@ -96,7 +96,11 @@ def read_datafiles(peak_infile=None, width_infile=None):
                     except KeyError: # no column titled "peaks"
                         data_row = [float(width) for width in string_to_list(row["widths"])]
                     dictionary[k] = data_row
-    return peaks, widths
+    to_return = [d for d in [peaks, widths] if d]
+    if len(to_return) == 1:
+        return to_return[0]
+    else:
+        return to_return
 
 #
 # Calculate the error between peak measurements in various ways
@@ -163,13 +167,13 @@ def calculate_error(data, error_fun):
 def plot_all_errors():
     # Data should already be generated
     # Uncomment line in __main__ below to generate it
-    data, trees = read_datafiles(data_infile="run/peaks.csv")
+    peaks = read_datafiles(peak_infile="run/peaks.csv")
     
     # Find points and error
-    x, y = calculate_axes(data)
-    stdev = calculate_error(data, error_stdev)
-    hdi = calculate_error(data, error_hdi)
-    listdrop = calculate_error(data, error_listdrop)
+    x, y = calculate_axes(peaks)
+    stdev = calculate_error(peaks, error_stdev)
+    hdi = calculate_error(peaks, error_hdi)
+    listdrop = calculate_error(peaks, error_listdrop)
 
     # Plot and label all of them
     fig, ax = plt.subplots()
@@ -189,21 +193,29 @@ def plot_all_errors():
     plt.show()
 
 def plot_error_vs_width():
-    data = read_datafile("run.csv")
+    peaks, widths = read_datafiles(peak_infile="run/peaks.csv", width_infile="run/widths.csv")
 
-    # Find error using HDI method (to simplify)
-    hdi = calculate_error(data, error_hdi)
-    print(hdi)
-    for down, up in hdi:
-        print([down, up])
-        print(down+up / 2)
+    # Find error using HDI method
+    hdi = calculate_error(peaks, error_hdi)
+    hdi_dist = [above + below for [below, above] in hdi.transpose()]
+    # Find the average width for each k in the tree
+    mean_widths = [sum(w) / len(w) for w in widths.values()]
 
-    # Find the average width for each...tree???
+    # Plotting
+    fig, ax = plt.subplots()
+    x = list(peaks.keys())
+    ax.scatter(x, hdi_dist, label="Between trees (HDI)", color="#D62828")
+    ax.scatter(x, mean_widths, label="Within trees (95% CI)", color="#FCBA36")
 
+    ax.set_xticks(x)
+    ax.set_title("Difference in variation within and between trees")
+    ax.set_xlabel("Value of k")
+    ax.set_ylabel("Mean variation")
+    ax.legend()
 
+    plt.show()
 
 if __name__ == "__main__":
     #write_datafiles([5, 10, 20, 40, 60, 80, 100], peak_outfile="run/peaks.csv", width_outfile="run/widths.csv", replicates=200)
-    peaks, widths = read_datafiles(peak_infile="run/peaks.csv", width_infile="run/widths.csv")
-
+    plot_error_vs_width()
     #plot_all_errors()

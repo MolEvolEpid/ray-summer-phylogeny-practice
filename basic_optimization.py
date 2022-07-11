@@ -44,18 +44,6 @@ def confidence_width(tree, peak_pos):
 # Input and output data files since these models can take a while to run
 #
 
-def data_from_trees(infile, outfile=None):
-    """
-    Pull trees from a tree file and generate data from them,
-    but also keep track of all the trees this time. 
-    """
-    out_trees = []
-    out_data = {}
-    with open(infile) as treefile:
-        trees = treefile.readlines()
-        for tree in trees:
-            # add the trees to 
-
 def generate_data(k_range, replicates=100, data_outfile=None, tree_outfile=None):
     """
     Generate trees using the parameters provided, returning a dict
@@ -76,29 +64,34 @@ def generate_data(k_range, replicates=100, data_outfile=None, tree_outfile=None)
             tree_out[k].append(t.write())
 
     # Write to either or both of the outfiles 
-    for outfile, data_title in zip([data_out, tree_out], ["peaks", "trees"]):
+    for outfile, dictionary, data_title in zip([data_outfile, tree_outfile], [data_out, tree_out], ["peaks", "trees"]):
         if outfile:
-            with open(outfile, "w", newline="") as csvfile:
+            with open(outfile, "w") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=["k", data_title])
                 writer.writeheader()
-                for key, value in outfile.items():
-                    writer.writerow({"k": key, "peaks": value})
-    return data, trees
+                for key, value in dictionary.items():
+                    writer.writerow({"k": key, data_title: value})
+    return data_out, tree_out
 
-def read_datafile(infile):
+def read_datafiles(data_infile=None, tree_infile=None):
     """
-    Read data from a file containing k and peaks information 
-    and return a dictionary.
+    Read data and trees from two files, returning a dictionary for each of them.
     """
     data = {}
-    with open(infile, newline="") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            # Turn strings back into the types of data we want
-            k = int(row["k"])
-            peaks = [float(peak) for peak in row["peak_data"].strip('][').split(', ')]
-            data[k] = peaks
-    return data
+    trees = {}
+    string_to_list = lambda s: s.strip('][').split(', ')
+    for infile, dictionary in zip([data_infile, tree_infile], [data, trees]):
+        if infile:
+            with open(infile) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    k = int(row["k"])
+                    try:
+                        data_row = [float(peak) for peak in string_to_list(row["peaks"])]
+                    except KeyError: # no column titled "peaks"
+                        data_row = [tree.strip("'") for tree in string_to_list(row["trees"])]
+                    dictionary[k] = data_row
+    return data, trees
 
 #
 # Calculate the error between peak measurements in various ways
@@ -165,7 +158,7 @@ def calculate_error(data, error_fun):
 def plot_all_errors():
     # Data should already be generated
     # Uncomment line in __main__ below to generate it
-    data = read_datafile("run.csv")
+    data, trees = read_datafiles(data_infile="run/peaks.csv")
     
     # Find points and error
     x, y = calculate_axes(data)
@@ -205,5 +198,5 @@ def plot_error_vs_width():
 
 
 if __name__ == "__main__":
-    #generate_data([5, 10, 20, 40, 60, 80, 100], outfile="run.csv", replicates=200)
+    #generate_data([5, 10, 20, 40, 60, 80, 100], data_outfile="run/peaks.csv", tree_outfile="run/trees.csv", replicates=200)
     plot_all_errors()

@@ -60,15 +60,22 @@ def generate_tree(params, pop_model=con_population):
       tree (str): the newick representation of a tree
     """
     run_params = params.copy() # Create a single use copy in case we run multiple times
-    nodes = [TreeNode(dist=0, name=str(i)) for i in range(run_params["k"])]
+    nodes = generate_nodes(run_params["k"])
     while len(nodes) > 1:
-        nodes = coalescence(nodes, population, run_params)
+        coal_time = next_coalescence_time(run_params, pop_model=pop_model)
+        nodes = coalescence(nodes, coal_time, run_params, pop_model=pop_model)
     return nodes[0].write(format=1)
 
 def generate_tree_multisample(start_params, sample_time, lineages_added, pop_model=con_population):
     """
     Generate a tree with the specified start parameters, adding in a certain number
     of lineages from a different host at a certain sample time.
+
+    Parameters
+      start_params (dict): a dictionary containing the run parameters including k at time 0.
+      sample_time (float): the time that additional lineages should be added
+      lineages_added (int): the number of additional lineages to add
+      pop_model (function): a function that returns the population at a certain time
     """
     run_params = start_params.copy() # Don't overwrite the original
 
@@ -91,7 +98,7 @@ def generate_tree_multisample(start_params, sample_time, lineages_added, pop_mod
             # Fast forward to the coalescence time
             print(f"Passed over sample time, fast-forwarding model from {time} to {sample_time}")
             diff = sample_time - time
-            time += diff
+            time = sample_time
             for node in nodes:
                 node.dist += diff
             continue

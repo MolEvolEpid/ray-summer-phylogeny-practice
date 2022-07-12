@@ -17,14 +17,79 @@ from population_models import con_probability, con_population, \
 # Find info about a single tree (peak, confidence interval width)
 #
 
+def find_pop_prob(string):
+    """
+    Given an input string for the population model used, return the corresponding
+    population and probability functions.
+
+    Parameters:
+      string (str): constant, linear, exponential, con, lin, or exp
+
+    Returns:
+      population (function): returns population based on parameters and time
+      probability (function): returns the probability of a certain coalescence occuring
+    """
+    if string.lower() == "constant" or string.lower() == "con":
+        return con_population, con_probability
+    elif string.lower() == "linear" or string.lower() == "lin":
+        return lin_population, lin_probability
+    elif string.lower() == "exponential" or string.lower() == "exp":
+        return exp_population, exp_probability
+    else:
+        raise Exception("String should be constant, linear, exponential, con, lin, or exp.")
+
+def maximize_N0(tree, mode="con", other={}):
+    """
+    Maximize the N0 of a model, either setting another parameter as fixed or omitting it
+    entirely.
+    
+    Parameters:
+      tree (TimeTree): Representation of the tree
+      mode (str): Type of probability and population to use
+      other (dict): OPTIONAL, one-item dictionary with another parameter and its fixed value
+
+    Returns:
+      x (TODO float or complex IDK yet): Optimal N0
+    """
+    pop, prob = find_pop_prob(mode)
+    if other:
+        name = next(iter(other))
+        fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": x, name: other[name]})
+    else: 
+        fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": x})
+    res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
+    return res.x
+
+def maximize_other(tree, N0, mode=""):
+    """
+    Maximize the r or b of a model, setting N0 to be constant.
+
+    Parameters:
+      tree (TimeTree): Representation of the tree
+      N0 (int): fixed N0 parameter
+      mode (str): Type of probability and population to use
+
+    Returns:
+      x (TODO float or complex IDK yet): Optimal parameter
+    """
+    pop, prob = find_pop_prob(mode)
+    if pop == lin_population:
+        to_optimize = "b"
+    elif pop == exp_population:
+        to_optimize = "r"
+    else:
+        raise Exception("Can only optimize linear or exponential models this way")
+    fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": N0, to_optimize: x})
+    res = minimize_scalar(fm, bracket=(1, 100), method="brent")
+    return res.x
+
 def max_log_lk(tree):
     """
+    TODO for now I'm just keeping this around for backwards compatibility.
     Maximize the log likelihood for a tree by manipulating N0. Can only be used
     for constant model, so I've hardcoded that in for now.
     """
-    fm = lambda x: -tree_likelihood(tree, con_population, con_probability, {"N0": x}) 
-    res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
-    return res.x
+    return maximize_N0(tree, other={}, mode="con")
 
 def confidence_width(tree, peak_pos):
     """

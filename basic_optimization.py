@@ -280,36 +280,80 @@ def plot_error_vs_width():
 
     plt.show()
 
-def peaks_b(infile, N0):
+def stats_b(infile, N0):
     peaks = []
+    widths = []
     with open(infile) as treefile:
         trees = treefile.readlines()
         for tree in trees:
             t = TimeTree(tree)
-            max_lk = maximize_other(t, N0, mode="lin") 
-            peaks.append(max_lk.real) # TODO be careful about imaginaries
+            max_lk = maximize_other(t, N0, mode="lin").real
+            width = confidence_width(t, max_lk)
+            peaks.append(max_lk) # TODO be careful about imaginaries
+            widths.append(width)
             #print(f"found a peak for b at {max_lk}")
-    return peaks
+    return peaks, widths
 
-def peaks_N0(infile, b):
+def stats_N0(infile, b):
     peaks = []
+    widths = []
     with open(infile) as treefile:
         trees = treefile.readlines()
         for tree in trees:
             t = TimeTree(tree)
-            max_lk = maximize_N0(t, mode="lin", other={"b": b})
-            peaks.append(max_lk.real) # TODO be careful about imaginaries
+            max_lk = maximize_N0(t, mode="lin", other={"b": b}).real
+            width = confidence_width(t, max_lk)
+            peaks.append(max_lk) # TODO be careful about imaginaries
+            widths.append(width)
             #print(f"found a peak for N0 at {max_lk}")
-    return peaks
+    return peaks, widths
+
+def linear_peak_errors(infile, param):
+    """
+    Parameters:
+      infile (str): Local file
+      param (dict): Dictionary with one item, either N0 or b
+    """
+    name = next(iter(param))
+    if name == "b":
+        peaks = stats_N0(infile, param["b"])[0]
+    elif name == "N0":
+        peaks = stats_b(infile, param["N0"])[0]
+
+    mean = lambda l: sum(l) / len(l)
+    stdev = error_stdev(peaks)
+    hdi = error_hdi(peaks)
+    listdrop = error_listdrop(peaks)
+
+    print(f"{infile} mean {name}: {mean(peaks)} stdev {stdev}, hdi {hdi}, listdrop {listdrop}") # we only have one set of trees, not like 5
+
+def linear_error_vs_width(infile, param):
+    """
+    Parameters:
+      infile (str): Local file
+      param (dict): Dictionary with one item, either N0 or b
+    """
+    name = next(iter(param))
+    if name == "b":
+        peaks, widths = stats_N0(infile, param["b"])
+    elif name == "N0":
+        peaks, widths = stats_b(infile, param["N0"])
+    error = list(error_hdi(peaks))
+    total_error = sum(error)
+    mean_width = sum(widths) / len(widths)
+    print(f"{infile} mean {name} hdi {total_error}, mean {name} width {mean_width}")
+
+
+
 
 if __name__ == "__main__":
-    latest_b = peaks_b("linear-latest.tre", 1100)
-    latest_N0 = peaks_N0("linear-latest.tre", 1095)
-    wider_b = peaks_b("linear-wider.tre", 3020)
-    wider_N0 = peaks_N0("linear-wider.tre", 1460)
-    mean = lambda l: sum(l) / len(l)
+    #linear_peak_errors("linear-latest.tre", {"N0": 1100})
+    #linear_peak_errors("linear-latest.tre", {"b": 1095})
+    #linear_peak_errors("linear-wider.tre", {"N0": 3020})
+    #linear_peak_errors("linear-wider.tre", {"b": 1460})
+    linear_error_vs_width("linear-latest.tre", {"N0": 1100})
+    linear_error_vs_width("linear-latest.tre", {"b": 1095})
+    linear_error_vs_width("linear-wider.tre", {"N0": 3020})
+    linear_error_vs_width("linear-wider.tre", {"b": 1460})
 
-    print(f"mean latest_b  {mean(latest_b)}")
-    print(f"mean latest_N0 {mean(latest_N0)}")
-    print(f"mean wider_b   {mean(wider_b)}")
-    print(f"mean wider_N0  {mean(wider_N0)}")
+    #print(f"mean wider_N0  {mean(wider_N0)}")

@@ -280,7 +280,36 @@ def plot_error_vs_width():
 
     plt.show()
 
+def peaks_b(infile, N0):
+    peaks = []
+    with open(infile) as treefile:
+        trees = treefile.readlines()
+        for tree in trees:
+            t = TimeTree(tree)
+            max_lk = maximize_other(t, N0, mode="lin") 
+            peaks.append(max_lk.real) # TODO be careful about imaginaries
+            #print(f"found a peak for b at {max_lk}")
+    return peaks
+
+def peaks_N0(infile, b):
+    peaks = []
+    with open(infile) as treefile:
+        trees = treefile.readlines()
+        for tree in trees:
+            t = TimeTree(tree)
+            max_lk = maximize_N0(t, mode="lin", other={"b": b})
+            peaks.append(max_lk.real) # TODO be careful about imaginaries
+            #print(f"found a peak for N0 at {max_lk}")
+    return peaks
+
 if __name__ == "__main__":
-    #write_datafiles([5, 10, 20, 40, 60, 80, 100], peak_outfile="run/peaks.csv", width_outfile="run/widths.csv", replicates=200)
-    plot_error_vs_width()
-    #plot_all_errors()
+    latest_b = peaks_b("linear-latest.tre", 1100)
+    latest_N0 = peaks_N0("linear-latest.tre", 1095)
+    wider_b = peaks_b("linear-wider.tre", 3020)
+    wider_N0 = peaks_N0("linear-wider.tre", 1460)
+    mean = lambda l: sum(l) / len(l)
+
+    print(f"mean latest_b  {mean(latest_b)}")
+    print(f"mean latest_N0 {mean(latest_N0)}")
+    print(f"mean wider_b   {mean(wider_b)}")
+    print(f"mean wider_N0  {mean(wider_N0)}")

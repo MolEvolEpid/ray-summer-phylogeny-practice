@@ -111,9 +111,20 @@ def generate_tree_multisample(start_params, sample_time, lineages_added, pop_mod
     # Return text version of the tree
     return nodes[0].write(format=1)
 
-from display_tree import display_tree
+def out():
+    params = {"N0": 1000, "k": 20}
+    with open("tree.out", "w") as treefile:
+        treefile.writelines([generate_tree_multisample(params, 500, 20, pop_model=con_population)])
+
 from time_tree import TimeTree
+def read():
+    with open("tree.out") as treefile:
+        nwk = treefile.readline()
+        return TimeTree(nwk)
+
+from display_tree import display_tree
 if __name__ == "__main__":
-    params = {"N0": 500, "k": 20}
-    t = TimeTree(generate_tree_multisample(params, 500, 20, pop_model=con_population))
-    display_tree(t)
+    pass
+    #out()
+    #t = read()
+

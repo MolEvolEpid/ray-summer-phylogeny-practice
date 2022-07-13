@@ -336,17 +336,73 @@ def linear_error_vs_width(infile, param):
     mean_width = sum(widths) / len(widths)
     print(f"{infile} mean {name} hdi {total_error}, mean {name} width {mean_width}")
 
+import matplotlib.pyplot as plt # TODO Only used here, delete when I delete the test
+def plot_mean_over_time(peaks):
+    mean_over_time = []
+    mean = lambda l: sum(l) / len(l) 
+    x = [peak+1 for peak in range(len(peaks))]
+    for i in x:
+        current_peaks = peaks[:i]
+        mean_over_time.append(mean(current_peaks))
+    
+    x = [peak+1 for peak in range(len(peaks))]
+    plt.plot(x, mean_over_time)
+    plt.show()
 
+def b_confidence_bounds(tree, N0, peak_pos):
+    peak_val = tree_likelihood(tree, lin_population, lin_probability, {"N0": N0, "b": peak_pos})
 
+    fm = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": N0, "b": x}) - peak_val + 1.92
+
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
+
+    return low_ci, high_ci # TODO why did I make this so hard for myself, this code sucks extra bad.
+
+def N0_confidence_bounds(tree, b, peak_pos):
+    peak_val = tree_likelihood(tree, lin_population, lin_probability, {"N0": peak_pos, "b": b})
+
+    fm = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": b}) - peak_val + 1.92
+
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
+
+    return low_ci, high_ci # TODO why did I make this so hard for myself, this code sucks extra bad.
+
+def trees_within_confidence_interval(infile, actual_b, actual_N0):
+    b_within_range = 0
+    N0_within_range = 0
+    num_trees = 0
+    with open(infile) as treefile:
+        trees = treefile.readlines()
+        num_trees = len(trees)
+        for t in trees:
+            tree = TimeTree(t)
+            peak_b = maximize_population_growth(tree, actual_N0, model="lin")
+            peak_N0 = maximize_N0(tree, {"b": actual_b})
+
+            err_b_low, err_b_high = b_confidence_bounds(tree, actual_N0, peak_b)
+            err_N0_low, err_N0_high = N0_confidence_bounds(tree, actual_b, peak_N0)
+
+            if err_b_low <= actual_b <= err_b_high:
+                b_within_range += 1
+            if err_N0_low <= actual_N0 <= err_N0_high:
+                N0_within_range += 1
+    
+    return b_within_range / num_trees, N0_within_range / num_trees
+
+def sanity_checks(infile):
+    actual_b = 1095
+    actual_N0 = 1100
+
+    b_peaks, b_widths = stats_b(infile, actual_b)
+    N0_peaks, N0_widths = stats_N0(infile, actual_N0)
+
+    plot_mean_over_time(b_peaks)
+    plot_mean_over_time(N0_peaks)
+
+    b_within, N0_within = trees_within_confidence_interval(infile, actual_b, actual_N0)
+    print(f"b% {b_within * 100} N0% {N0_within * 100}")
 
 if __name__ == "__main__":
-    #linear_peak_errors("linear-latest.tre", {"N0": 1100})
-    #linear_peak_errors("linear-latest.tre", {"b": 1095})
-    #linear_peak_errors("linear-wider.tre", {"N0": 3020})
-    #linear_peak_errors("linear-wider.tre", {"b": 1460})
-    linear_error_vs_width("linear-latest.tre", {"N0": 1100})
-    linear_error_vs_width("linear-latest.tre", {"b": 1095})
-    linear_error_vs_width("linear-wider.tre", {"N0": 3020})
-    linear_error_vs_width("linear-wider.tre", {"b": 1460})
-
-    #print(f"mean wider_N0  {mean(wider_N0)}")
+    sanity_checks("linear-latest.tre")

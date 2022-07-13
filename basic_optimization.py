@@ -14,84 +14,65 @@ from population_models import con_probability, con_population, \
                               exp_probability, exp_population
 
 #
-# Find info about a single tree (peak, confidence interval width)
+# Optimize one parameter of a tree
 #
 
-def find_pop_prob(string):
-    """
-    Given an input string for the population model used, return the corresponding
-    population and probability functions.
-
-    Parameters:
-      string (str): constant, linear, exponential, con, lin, or exp
-
-    Returns:
-      population (function): returns population based on parameters and time
-      probability (function): returns the probability of a certain coalescence occuring
-    """
-    if string.lower() == "constant" or string.lower() == "con":
-        return con_population, con_probability
-    elif string.lower() == "linear" or string.lower() == "lin":
-        return lin_population, lin_probability
-    elif string.lower() == "exponential" or string.lower() == "exp":
-        return exp_population, exp_probability
-    else:
-        raise Exception("String should be constant, linear, exponential, con, lin, or exp.")
-
-def maximize_N0(tree, mode="con", other={}):
+def maximize_N0(tree, population_growth={}):
     """
     Maximize the N0 of a model, either setting another parameter as fixed or omitting it
     entirely.
     
     Parameters:
       tree (TimeTree): Representation of the tree
-      mode (str): Type of probability and population to use
-      other (dict): OPTIONAL, one-item dictionary with another parameter and its fixed value
+      population_growth (dict): OPTIONAL, one-item dictionary with another parameter and its fixed value
 
     Returns:
-      x (TODO float or complex IDK yet): Optimal N0
+      x (float): Optimal N0. Should be a float, but inexplicably returns solutions
+      with an imaginary component sometimes.
     """
-    pop, prob = find_pop_prob(mode)
-    if other:
-        name = next(iter(other))
-        fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": x, name: other[name]})
-    else: 
+    if population_growth:
+        param_name = next(iter(population_growth))
+        if param_name == "b": # Linear
+            pop = lin_population
+            prob = lin_probability
+        elif param_name == "r": # Exponential
+            pop = exp_population
+            prob = exp_probability
+        fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": x, param_name: population_growth[param_name]})
+    else: # Constant
+        pop = con_population
+        prob = con_probability
         fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": x})
+
     res = minimize_scalar(fm, bracket=(100, 10000), method="brent")
     return res.x
 
-def maximize_other(tree, N0, mode=""):
+def maximize_population_growth(tree, N0, model):
     """
     Maximize the r or b of a model, setting N0 to be constant.
 
     Parameters:
       tree (TimeTree): Representation of the tree
       N0 (int): fixed N0 parameter
-      mode (str): Type of probability and population to use
+      model (str): "lin" or "exp", specifying which model to use.
 
     Returns:
       x (TODO float or complex IDK yet): Optimal parameter
     """
-    pop, prob = find_pop_prob(mode)
-    if pop == lin_population:
+    if model == "lin":
+        pop = lin_population
+        prob = lin_probability
         to_optimize = "b"
-    elif pop == exp_population:
-        to_optimize = "r"
+    elif model == "exp":
+        pop = exp_population
+        prob = exp_probability
     else:
         raise Exception("Can only optimize linear or exponential models this way")
     fm = lambda x: -tree_likelihood(tree, pop, prob, {"N0": N0, to_optimize: x})
     res = minimize_scalar(fm, bracket=(1, 100), method="brent")
     return res.x
 
-def max_log_lk(tree):
-    """
-    TODO for now I'm just keeping this around for backwards compatibility.
-    Maximize the log likelihood for a tree by manipulating N0. Can only be used
-    for constant model, so I've hardcoded that in for now.
-    """
-    return maximize_N0(tree, other={}, mode="con")
-
-def confidence_width(tree, peak_pos):
+def confidence_width_N0(tree, peak_pos):
     """
     Return the width of the 95% confidence interval of a tree,
     given the value of the peak likelihood.
@@ -99,20 +80,32 @@ def confidence_width(tree, peak_pos):
     peak_val = tree_likelihood(tree, con_population, con_probability, {"N0": peak_pos})
     
     # A function that has its roots at peak - 2 so I can find the roots
-    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
+    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 1.92
 
     low_ci = brentq(fm, 1e-10, peak_pos)
     high_ci = brentq(fm, peak_pos, 100*peak_pos)
     return high_ci - low_ci
 
+def confidence_width_b(tree, N0, peak_pos):
+    peak_val = tree_likelihood(tree, lin_population, lin_probability, {"N0": N0, "b": peak_pos})
+
+    fm = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": N0, "b": x}) - peak_val + 1.92
+
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
+    return high_ci - low_ci
+
+
 #
 # Input and output data files since these models can take a while to run
 #
 
-def write_datafiles(k_range, replicates=100, peak_outfile=None, width_outfile=None):
+def write_con_datafiles(k_range, replicates=100, peak_outfile=None, width_outfile=None):
     """
     Generate trees using the parameters provided, writing the peaks and 
     confidence intervals of the tree to the specified output files.
+
+    WARNING: Only uses a constant population model.
     """
     # Generate a bunch of trees and extract their data
     peaks_out = {}
@@ -125,9 +118,9 @@ def write_datafiles(k_range, replicates=100, peak_outfile=None, width_outfile=No
         for _ in range(replicates):
             print(f"  replicate {_}")
             t = TimeTree(generate_tree(con_population, run_params))
-            peak_pos = max_log_lk(t)
+            peak_pos = maximize_N0(t)
             peaks_out[k].append(peak_pos)
-            widths_out[k].append(confidence_width(t, peak_pos))
+            widths_out[k].append(confidence_width_N0(t, peak_pos))
 
     # Write to either or both of the outfiles 
     for outfile, dictionary, data_title in zip([peak_outfile, width_outfile], 
@@ -287,8 +280,8 @@ def stats_b(infile, N0):
         trees = treefile.readlines()
         for tree in trees:
             t = TimeTree(tree)
-            max_lk = maximize_other(t, N0, mode="lin").real
-            width = confidence_width(t, max_lk)
+            max_lk = maximize_population_growth(t, N0, model="lin").real
+            width = confidence_width_N0(t, max_lk)
             peaks.append(max_lk) # TODO be careful about imaginaries
             widths.append(width)
             #print(f"found a peak for b at {max_lk}")
@@ -301,8 +294,8 @@ def stats_N0(infile, b):
         trees = treefile.readlines()
         for tree in trees:
             t = TimeTree(tree)
-            max_lk = maximize_N0(t, mode="lin", other={"b": b}).real
-            width = confidence_width(t, max_lk)
+            max_lk = maximize_N0(t, {"b": b}).real
+            width = confidence_width_N0(t, max_lk)
             peaks.append(max_lk) # TODO be careful about imaginaries
             widths.append(width)
             #print(f"found a peak for N0 at {max_lk}")

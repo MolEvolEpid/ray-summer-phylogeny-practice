@@ -1,3 +1,11 @@
+# Beamer TeX files
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+
 # Vim swap files while editor is open
 *.swp
 

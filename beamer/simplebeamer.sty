@@ -1,0 +1,148 @@
+\ProvidesPackage{simplebeamer}     % must match file name
+
+%--------------------------------------------------
+% Misc packages
+%--------------------------------------------------
+
+% Including figures
+\usepackage{graphicx}
+
+% Importing figures from R via tikzDevice
+\usepackage{tikz}
+
+% Fancier tables
+% \usepackage{multirow}
+
+% Strikeout text, \sout
+% \usepackage[normalem]{ulem}
+
+% Relative handling of subdirectory paths in input, includegraphics
+\usepackage{import}
+
+%--------------------------------------------------
+% Colors
+%--------------------------------------------------
+
+\usepackage{color}
+\definecolor{mydim}{rgb}{0.5,0.5,0.5}
+\definecolor{LANLBlue}{HTML}{09198D}
+
+%--------------------------------------------------
+% Slide layout
+%--------------------------------------------------
+
+%%% Overall theme %%%
+
+% Removed a little from Singapore theme
+\setbeamercolor{section in head/foot}{use=structure,bg=structure.fg!25!bg}
+% \useoutertheme[subsection=false]{miniframes}
+\useoutertheme{default}
+\setbeamertemplate{frametitle}[default][center]
+\AtBeginDocument{%
+  {
+    \usebeamercolor{section in head/foot}
+  }
+  \pgfdeclareverticalshading{beamer@headfade}{\paperwidth}
+  {%
+    color(0cm)=(bg);
+    color(1.25cm)=(section in head/foot.bg)%
+  }
+  \setbeamercolor{section in head/foot}{bg=}
+}
+\addtoheadtemplate{\pgfuseshading{beamer@headfade}\vskip-1cm}{}
+
+%%% Frame titles %%%
+
+% Frame titles
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamerfont{frametitle}{size=\large}		% default is Large
+\setbeamercolor{titlelike}{fg=LANLBlue}
+\setbeamercolor{section in head/foot}{use=structure,bg=LANLBlue!33!bg}
+
+% Produce other text in the title style
+\newcommand{\titletext}[1]{\textcolor{LANLBlue}{\bf #1}}
+
+%%% Blocks %%%
+
+% Matched to frame titles
+\setbeamertemplate{blocks}[default]
+\setbeamerfont{block title}{size=\normalsize}
+\setbeamercolor{block title}{fg=darkpurple}
+\setbeamerfont{block title}{series=\bfseries}
+
+%%% Margins %%%
+
+%\setbeamersize{text margin left=2em, text margin right=2em}
+
+%--------------------------------------------------
+% Environments
+%--------------------------------------------------
+
+%%% Itemize-like environments %%%
+
+\setbeamercolor{item}{fg=black}
+\setbeamertemplate{itemize item}{$\ast$}
+\setbeamertemplate{itemize subitem}{$\circ$}
+\setbeamertemplate{enumerate items}{\theenumi.}
+\setbeamerfont{item}{size=\normalsize}
+\setbeamerfont{itemize/enumerate body}{size=\normalsize}
+\setbeamerfont{itemize/enumerate subbody}{size=\normalsize}
+\setbeamerfont{itemize/enumerate subsubbody}{size=\normalsize}
+
+%%% Inobtrusive footnotes %%%
+
+\renewcommand\footnoterule{\rule{\linewidth}{0pt}}
+
+% black, on left: for citations
+\newcommand\ftnA[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{\hspace{-18pt}{\footnotesize{#1}}}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+% gray, on right: for image credits
+\newcommand\ftnB[1]{%
+  \begingroup
+  \renewcommand\thefootnote{}\footnote{\hfill\color{mydim}{{\em \Tiny{#1}}}}%
+  \addtocounter{footnote}{-1}%
+  \endgroup
+}
+
+\newenvironment{whitebold}{\par\color{white}\bfseries\Large}{\par}
+
+%%% Misc settings %%%
+
+% Number each page
+% \setbeamertemplate{footline}[page number]
+% \setbeamertemplate{footline}[frame number]
+
+% Page numbers, LANL logo
+\newcommand{\Ffootline}{%
+    \includegraphics[width=4mm]{lanl-icon-small}
+    \hfill %}
+    \textcolor{LANLBlue}{\insertframenumber}}
+\setbeamertemplate{footline}{%
+    \usebeamerfont{structure}
+    \footnotesize \vspace{-4mm} \hspace*{2mm} \Ffootline \hspace{2mm} \vspace{2mm}
+}
+
+% No navigation buttons
+\setbeamertemplate{navigation symbols}{}
+
+% Note: can be applied to single slides to make \uncover do dimming
+\newcommand{\usedimming}{
+    \setbeamercovered{%
+        still covered = {\opaqueness<1->{0}},
+        again covered = {\opaqueness<1->{50}}
+    }
+}
+
+%%% Alignment in tables %%%
+% http://tex.stackexchange.com/questions/12703/how-to-create-fixed-width-table-columns-with-text-raggedright-centered-raggedlef
+
+% Allows m{} in tabular for vertical centering
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}

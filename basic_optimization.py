@@ -19,45 +19,40 @@ from population_models import con_probability, con_population, \
 
 def generate_likelihood_function(tree, target_param, fixed_params):
     """
-    Based on the name of the target parameter and the name and value of 
+    Based on the name of the target parameter and the name and value of
     any fixed parameters, return a lambda function that takes the target_param
     as input and outputs the corresponding likelihood.
 
     Parameters:
       target_param (str): "N0", "b", or "r"
-      fixed_params (dict): Dictionary with one item, 
+      fixed_params (dict): Dictionary with one item,
         giving the name and value of the fixed parameter.
 
     Returns:
-      fm (function): Single-parameter function returning the probability of a tree at
+      func (function): Single-parameter function returning the probability of a tree at
         a certain parameter value.
     """
     fixed_names = [name for name in fixed_params.keys()]
     # Constant - N0
     if target_param == "N0" and not fixed_names:
-        pop, prob = con_population, con_probability
-        fm = lambda x: tree_likelihood(tree, pop, prob, {"N0": x})
+        func = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x})
     # Linear - N0
     elif target_param == "N0" and "b" in fixed_names:
-        pop, prob = lin_population, lin_probability
-        fm = lambda x: tree_likelihood(tree, pop, prob, {"N0": x, "b": fixed_params["b"]})
+        func = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": fixed_params["b"]})
     # Exponential - N0
     elif target_param == "N0" and "r" in fixed_names:
-        pop, prob = exp_population, exp_probability
-        fm = lambda x: tree_likelihood(tree, pop, prob, {"N0": x, "r": fixed_params["r"]})
+        func = lambda x: tree_likelihood(tree, exp_population, exp_probability, {"N0": x, "r": fixed_params["r"]})
     # Linear - b
     elif target_param == "b" and "N0" in fixed_names:
-        pop, prob = lin_population, lin_probability
-        fm = lambda x: tree_likelihood(tree, pop, prob, {"b": x, "N0": fixed_params["N0"]})
+        func = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"b": x, "N0": fixed_params["N0"]})
     # Exponential - r
     elif target_param == "r" and "N0" in fixed_names:
-        pop, prob = exp_population, exp_probability
-        fm = lambda x: tree_likelihood(tree, pop, prob, {"r": x, "N0": fixed_params["N0"]})
+        func = lambda x: tree_likelihood(tree, exp_population, exp_probability, {"r": x, "N0": fixed_params["N0"]})
     else:
         raise Exception(f"Could not find the correct function for target {target_param} and fixed {fixed_names}. Maybe Ray forgot to add them?")
-    return fm
+    return func
 
-def max_likelihood(tree, target_param, fixed_params={}, output_val=False):
+def max_likelihood(tree, target_param, fixed_params={}):
     """
     Use single-parameter optimization to find the most likely value of a target param
     with relation to a tree.
@@ -68,27 +63,62 @@ def max_likelihood(tree, target_param, fixed_params={}, output_val=False):
       fixed_params (dict): Optional dict of fixed values. Each entry should contain
         the name of a fixed param as the key and its value. If no fixed_params is
         provided, a constant model will be assumed.
-      output_val (bool): Whether or not to also return the likelihood value at the
-        optimized position. Defaults to false.
+
+    Returns:
+      peak_pos (float): Optimal value of the target param
     """
     lk_func = generate_likelihood_function(tree, target_param, fixed_params)
     fm = lambda x: -lk_func(x)
-    res = minimize_scalar(fm, bracket=(2, 100), method="brent")
-    if output_val:
-        return res.x, lk_func(res.x)
-    else:
-        return res.x
+    res = minimize_scalar(fm, bracket=(100, 1000), method="brent")
+    return res.x
+
+def confidence_width(tree, peak_pos):
+    """
+    Return the width of the 95% confidence interval of a tree,
+    given the value of the peak likelihood.
+    """
+    peak_val = tree_likelihood(tree, con_population, con_probability, {"N0": peak_pos})
+                            
+    # A function that has its roots at peak - 2 so I can find the roots
+    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
+
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
+    return high_ci, low_ci
+
+def upd_duplicate(tree, peak_pos):
+    peak_val = tree_likelihood(tree, lin_population, lin, probability, {"N0": peak_pos, "b": 1100})
+
+    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
+
+    low_ci = brentq(fm, 1e-10, peak_pos)
+    high_ci = brentq(fm, peak_pos, 100*peak_pos)
+    return high_ci, low_ci
 
 def confidence_bounds(tree, target_param, fixed_params={}):
     """
     Return the upper and lower bounds on the 95% confidence interval of a tree.
+
+    Parameters:
+      tree (TimeTree): Representation of the tree in memory
+      target_param(str): The parameter to optimize. Can be "N0", "b", or "r".
+      fixed_params (dict): Optional dict of fixed values. Each entry should contain
+        the name of a fixed param as the key and its value. If no fixed_params is
+        provided, a constant model will be assumed.
+
+    Returns:
+      low_ci (float): Lower bound of confidence interval
+      high_ci (float): Higher bound of confidence interval
     """
-    peak_pos, peak_val = max_likelihood(tree, target_param, fixed_params, output_val=True)
     lk_func = generate_likelihood_function(tree, target_param, fixed_params)
-    fm = lambda x: lk_func(x) - peak_val + 1.92 # Has x-intercepts at peak_val - 1.92 
+    
+    peak_pos = max_likelihood(tree, target_param, fixed_params=fixed_params)
+    peak_val = lk_func(peak_pos)
+
+    fm = lambda x: lk_func(x) - peak_val + 1.92 # Has intercepts at peak - 1.92
     low_ci = brentq(fm, 1e-10, peak_pos)
     high_ci = brentq(fm, peak_pos, 10*peak_pos)
-    print(f"  {low_ci} {peak_pos} {high_ci}")
+
     return low_ci, high_ci
 
 #
@@ -225,9 +255,7 @@ def test_trees_within_95_ci(trees, actual_params):
     within_range_N0 = 0 
     actual_b = actual_params["b"]
     actual_N0 = actual_params["N0"]
-    tmp_i = 0 # DELETE ME TODO
-    for tree in trees:
-        tmp_i += 1
+    for tmp_i, tree in enumerate(trees):
         print(f"doing tree {tmp_i}")
         low_N0, high_N0 = confidence_bounds(tree, "N0", fixed_params={"b": actual_b})
         print(f"  N0 bounds {low_N0} to {high_N0}, actual {actual_N0}")
@@ -237,6 +265,7 @@ def test_trees_within_95_ci(trees, actual_params):
             within_range_N0 += 1
         if low_b <= actual_b <= high_b:
             within_range_b += 1
+        tmp_i += 1
     total = len(trees)
     return within_range_b / total, within_range_N0 / total
 
@@ -248,5 +277,8 @@ def test(infile, actual_params):
         print(percent_b, percent_N0)
 
 if __name__ == '__main__':
-    actual_params = {"N0": 1095, "b": 1100}
-    test("linear-latest.tre", actual_params)
+    treefile = open("linear-latest.tre")
+    t = TimeTree(treefile.readline())
+    treefile.close()
+    #actual_params = {"N0": 1095, "b": 1100}
+    #test("linear-latest.tre", actual_params)

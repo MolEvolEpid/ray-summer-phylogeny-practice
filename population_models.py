@@ -76,12 +76,15 @@ def con_probability(params, z):
         k : sample size
         N0 : population
       z : time of occurence
+
+    Returns:
+      probability (float): The probability of a coalescence occuring
     """
     k = params["k"]
     N0 = params["N0"]
-    lmd = k*(k - 1)/(2*N0)
     if N0 <= 0:
         return 0
+    lmd = k*(k - 1)/(2*N0)
     return lmd * math.exp(-lmd*z)
 
 def lin_probability(params, z):
@@ -94,11 +97,14 @@ def lin_probability(params, z):
         N0 : population
         b : slope (> 0)
       z : time of occurence
+
+    Returns:
+      probability (float): The probability of a coalescence occuring
     """
     k = params["k"]
     N0 = params["N0"]
     b = params["b"]
-    if N0 <= 0:
+    if N0 - b*z <= 0: # would result in /0 errors, so we return 0 instead
         return 0
     return (k*(k-1)/2) / (N0-b*z) * (N0 / (N0-b*z))**(-k*(k-1)/(2*b))
 
@@ -112,6 +118,9 @@ def exp_probability(params, z):
         N0 : population
         r : rate of change (> 0)
       z : time of occurence
+
+    Returns:
+      probability (float): The probability of a coalescence occuring
     """
     k = params["k"]
     N0 = params["N0"]

@@ -112,10 +112,11 @@ def write_con_datafiles(k_range, replicates=100, peak_outfile=None, width_outfil
         widths_out[k] = []
         for _ in range(replicates):
             print(f"  replicate {_}")
-            t = TimeTree(generate_tree(con_population, run_params))
-            peak_pos = maximize_N0(t)
+            t = TimeTree(generate_tree(run_params))
+            peak_pos = max_likelihood(t, "N0")
             peaks_out[k].append(peak_pos)
-            widths_out[k].append(confidence_width_N0(t, peak_pos))
+            low_ci, high_ci = confidence_bounds(t, "N0")
+            widths_out[k].append(high_ci - low_ci)
 
     # Write to either or both of the outfiles 
     for outfile, dictionary, data_title in zip([peak_outfile, width_outfile], 
@@ -213,5 +214,39 @@ def calculate_error(data, error_fun):
     error_array = np.array(error)
     return np.transpose(error_array)
 
-if __name__ == "__main__":
-    pass
+#
+# Another good attempt at sanity checking on linear trees.
+#
+
+def test_trees_within_95_ci(trees, actual_params):
+    # TESTING ONLY WORKS ON LINEAR TREES
+    # HARDCODED. BEWARE.
+    within_range_b = 0 
+    within_range_N0 = 0 
+    actual_b = actual_params["b"]
+    actual_N0 = actual_params["N0"]
+    tmp_i = 0 # DELETE ME TODO
+    for tree in trees:
+        tmp_i += 1
+        print(f"doing tree {tmp_i}")
+        low_N0, high_N0 = confidence_bounds(tree, "N0", fixed_params={"b": actual_b})
+        print(f"  N0 bounds {low_N0} to {high_N0}, actual {actual_N0}")
+        low_b, high_b = confidence_bounds(tree, "b", fixed_params={"N0": actual_N0})
+        print(f"  b bounds {low_b} to {high_b}, actual {actual_b}")
+        if low_N0 <= actual_N0 <= high_N0:
+            within_range_N0 += 1
+        if low_b <= actual_b <= high_b:
+            within_range_b += 1
+    total = len(trees)
+    return within_range_b / total, within_range_N0 / total
+
+def test(infile, actual_params):
+    with open(infile) as treefile:
+        lines = treefile.readlines()
+        trees = [TimeTree(line) for line in lines]
+        percent_b, percent_N0 = test_trees_within_95_ci(trees, actual_params)
+        print(percent_b, percent_N0)
+
+if __name__ == '__main__':
+    actual_params = {"N0": 1095, "b": 1100}
+    test("linear-latest.tre", actual_params)

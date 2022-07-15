@@ -1,9 +1,12 @@
 import unittest
+from tree_likelihood import *
+from population_models import *
+from numpy import inf
+from time_tree import *
 
 #
 # population_models.py
 #
-from population_models import *
 
 class TestPopulation(unittest.TestCase):
     
@@ -36,9 +39,6 @@ class TestProbability(unittest.TestCase):
     def test_con_prob_timelarge(self):
         self.assertEqual(con_probability({"N0": 1000, "k": 20}, 123.456), 1.2349923998740305e-11)
 
-    def test_lin_prob_timezero(self):
-        self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0), 0.19)
-
     def test_lin_prob_timesmall(self):
         self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0.123), 0.1857240689796149)
 
@@ -57,7 +57,6 @@ class TestProbability(unittest.TestCase):
 #
 # time_tree.py
 #
-from time_tree import *
 
 class TestTimeTree(unittest.TestCase):
 
@@ -74,7 +73,6 @@ class TestTimeTree(unittest.TestCase):
 #
 # tree_likelihood.py
 #
-from tree_likelihood import *
 
 class TestTreeSegments(unittest.TestCase):
 
@@ -146,6 +144,11 @@ class TestTreeLikelihood(unittest.TestCase):
         self.assertEqual(tree_likelihood(t, lin_population, lin_probability, {"N0": 1000, "b": 20}), \
                 -22.31409139571443)
 
+
+    def test_lin_failsafe(self):
+        tree = TimeTree("(A:2, B:2):1;") 
+        self.assertEqual(tree_likelihood(tree, lin_population, lin_probability, {"N0": 1000, "b": 1000, "k": 20}), -inf)
+
     def test_exp_likelihood_basic(self):
         # I did the calculations for this by hand and was off by ~0.01.
         # My first segment was off, but my second was right. This makes me think 
@@ -169,6 +172,9 @@ class TestTreeLikelihood(unittest.TestCase):
         self.assertEqual(tree_likelihood(t, exp_population, exp_probability, {"N0": 1000, "r": 0.5}), \
                 -19.109145638505797)
 
+    def test_exp_failsafe(self):
+        tree = TimeTree("(A:2, B:2):1;") 
+        self.assertEqual(tree_likelihood(tree, exp_population, exp_probability, {"N0": 1000, "r": 4.0, "k": 20}), -inf)
 
 if __name__ == "__main__":
     unittest.main()

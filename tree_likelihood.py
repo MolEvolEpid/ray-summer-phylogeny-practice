@@ -34,14 +34,18 @@ def tree_likelihood(tree, population, probability, params):
     log_likelihood = 0
     params_now = params.copy()
     params_now["k"] = len(tree.get_leaves()) # TODO later will need to by by group
+
+    # Sanity check that these params won't make population invalid at the root of the tree
+    total_time = tree.get_farthest_node()[1]
+    if population(params, total_time) < 1:
+        return -np.inf
+
     for (start, end, dist) in tree_segments(tree):
         params_now["N0"] = population(params, start)
         if params_now["k"] == 1:
             print("WARNING: k was 1")
         else:
-            #print(f"trying with {params_now}, {dist}")
             segment_lk = np.log(probability(params_now, dist))
-            #print(f"    {segment_lk}")
             log_likelihood += segment_lk
         params_now["k"] -= 1
     return log_likelihood

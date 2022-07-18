@@ -31,14 +31,14 @@ def tree_likelihood(tree, population, probability, params):
     Return the log likelihood of a tree existing based
     on the given population model and probability function.
     """
+    # Sanity check that these params won't make population invalid at the root of the tree
+    total_time = tree.get_farthest_node()[1]
+    if population(params, total_time) < 0:
+        return -np.inf
+
     log_likelihood = 0
     params_now = params.copy()
     params_now["k"] = len(tree.get_leaves()) # TODO later will need to by by group
-
-    # Sanity check that these params won't make population invalid at the root of the tree
-    total_time = tree.get_farthest_node()[1]
-    if population(params, total_time) < 1:
-        return -np.inf
 
     for (start, end, dist) in tree_segments(tree):
         params_now["N0"] = population(params, start)

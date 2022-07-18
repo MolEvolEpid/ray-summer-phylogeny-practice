@@ -7,14 +7,20 @@ from population_models import con_population
 
 rng = Generator(PCG64())
 
-def generate_nodes(number, prefix=""):
+def generate_nodes(number, start=0, host=""):
+    """
+    Generate a certain number of numbered nodes, optionally giving each
+    a name prefix corresponding to their name.
+    """
     nodes = []
-    for i in range(number):
-        if prefix:
-            node_name = prefix + "_" + str(i)
+    for i in range(start, start+number):
+        if host:
+            name = prefix + "_" + str(i)
+            node = TreeNode(dist=0, name=name)
+            # It's not useful to set node.host since it gets exported to text
         else:
-            node_name = str(i)
-        nodes.append(TreeNode(dist=0, name=node_name))
+            node = TreeNode(dist=0, name=str(i+1))
+        nodes.append(node)
     return nodes
 
 def next_coalescence_time(params, pop_model=con_population):
@@ -110,6 +116,46 @@ def generate_tree_multisample(start_params, sample_time, lineages_added, pop_mod
 
     # Return text version of the tree
     return nodes[0].write(format=1)
+
+def generate_tree_multihost(host1_params, host2_params, transmission_time, model="con"):
+    """
+    Generate a tree with two hosts, each with their own parameters.
+
+    Params:
+      host1_params (dict):
+        N0 (int): population size
+        k (int): starting nodes
+      host2_params (dict):
+        N0 (int): population size
+        k (int): starting nodes
+      transmission_time (real): time of transmission
+      model (str): Type of model to use - "con", "lin", or "exp"
+
+    Returns:
+      t (str): Newick representation of tree
+    """
+    h1_run = host1_params.copy()
+    h2_run = host2_params.copy()
+
+    if model == "con":
+        pop_model = con_population
+    else:
+        raise Exception("I can only run this on a constant model right now.")
+
+    # Generate nodes for each host, keeping them separate for now
+    h1_nodes = generate_nodes(h1_run["k"], host="D")
+    h2_nodes = generate_nodes(h2_run["k"], host="R", start=h1_run["k"])
+
+    # Run until we have one node left
+    while len(h1_nodes + h2_nodes) > 1:
+        for nodes in [h1_nodes, h2_nodes]:
+            # Do coalescences...?
+            # Need to make sure every time whether we've passed over the transmission time
+            # And handle it if so
+            # But I can't handle it right now
+            pass
+        coal_time = next_coalescence_time()
+
 
 def out():
     params = {"N0": 1000, "k": 20}

@@ -36,21 +36,26 @@ def generate_likelihood_function(tree, target_param, fixed_params):
     # Constant - N0
     if target_param == "N0" and not fixed_names:
         func = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x})
+        model = "con"
     # Linear - N0
     elif target_param == "N0" and "b" in fixed_names:
         func = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": fixed_params["b"]})
+        model = "lin"
     # Exponential - N0
     elif target_param == "N0" and "r" in fixed_names:
         func = lambda x: tree_likelihood(tree, exp_population, exp_probability, {"N0": x, "r": fixed_params["r"]})
+        model = "exp"
     # Linear - b
     elif target_param == "b" and "N0" in fixed_names:
         func = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"b": x, "N0": fixed_params["N0"]})
+        model = "lin"
     # Exponential - r
     elif target_param == "r" and "N0" in fixed_names:
         func = lambda x: tree_likelihood(tree, exp_population, exp_probability, {"r": x, "N0": fixed_params["N0"]})
+        model = "exp"
     else:
         raise Exception(f"Could not find the correct function for target {target_param} and fixed {fixed_names}. Maybe Ray forgot to add them?")
-    return func
+    return func, model
 
 def max_likelihood(tree, target_param, fixed_params={}):
     """
@@ -67,9 +72,18 @@ def max_likelihood(tree, target_param, fixed_params={}):
     Returns:
       peak_pos (float): Optimal value of the target param
     """
-    lk_func = generate_likelihood_function(tree, target_param, fixed_params)
+    lk_func, model = generate_likelihood_function(tree, target_param, fixed_params)
     fm = lambda x: -lk_func(x)
-    res = minimize_scalar(fm, bracket=(100, 1000), method="brent")
+
+    if model == "lin":
+        if "b" in fixed_params:
+    elif model == "exp":
+        pass
+    elif model == "con":
+        pass
+    else:
+        raise Exception("Can only take model of lin, exp, or con")
+    res = minimize_scalar(fm, bracket=(100, 101), method="brent")
     return res.x
 
 def confidence_width(tree, peak_pos):
@@ -80,15 +94,6 @@ def confidence_width(tree, peak_pos):
     peak_val = tree_likelihood(tree, con_population, con_probability, {"N0": peak_pos})
                             
     # A function that has its roots at peak - 2 so I can find the roots
-    fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
-
-    low_ci = brentq(fm, 1e-10, peak_pos)
-    high_ci = brentq(fm, peak_pos, 100*peak_pos)
-    return high_ci, low_ci
-
-def upd_duplicate(tree, peak_pos):
-    peak_val = tree_likelihood(tree, lin_population, lin, probability, {"N0": peak_pos, "b": 1100})
-
     fm = lambda x: tree_likelihood(tree, con_population, con_probability, {"N0": x}) - peak_val + 2
 
     low_ci = brentq(fm, 1e-10, peak_pos)
@@ -277,8 +282,8 @@ def test(infile, actual_params):
         print(percent_b, percent_N0)
 
 if __name__ == '__main__':
-    treefile = open("linear-latest.tre")
-    t = TimeTree(treefile.readline())
-    treefile.close()
-    #actual_params = {"N0": 1095, "b": 1100}
-    #test("linear-latest.tre", actual_params)
+    #treefile = open("linear-latest.tre")
+    #t = TimeTree(treefile.readline())
+    #treefile.close()
+    actual_params = {"N0": 1095, "b": 1100}
+    test("linear-latest.tre", actual_params)

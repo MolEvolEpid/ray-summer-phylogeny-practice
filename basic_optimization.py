@@ -6,7 +6,7 @@ import csv
 from time_tree import TimeTree
 from tree_likelihood import tree_likelihood
 from tree_generation import generate_tree
-from scipy.optimize import minimize_scalar, brentq
+from scipy.optimize import minimize_scalar, brentq, minimize
 from arviz import hdi
 # TODO I eventually wanna support lin and exp too, but I can only generate con right now.
 from population_models import con_probability, con_population, \
@@ -76,7 +76,7 @@ def max_likelihood(tree, target_param, fixed_params={}):
     fm = lambda x: -lk_func(x)
 
     if model == "lin":
-        if "b" in fixed_params:
+        pass
     elif model == "exp":
         pass
     elif model == "con":
@@ -84,6 +84,15 @@ def max_likelihood(tree, target_param, fixed_params={}):
     else:
         raise Exception("Can only take model of lin, exp, or con")
     res = minimize_scalar(fm, bracket=(100, 101), method="brent")
+    return res.x
+
+def optimize_linear(tree):
+    """
+    Attempt to use multi-parameter optimization to find the best N0 and b
+    for a linear tree.
+    """
+    fm = lambda x: -tree_likelihood(tree, lin_population, lin_probability, {"N0": x[0], "b": x[1]})
+    res = minimize(fm, (100, 1), method="BGFS")
     return res.x
 
 def confidence_width(tree, peak_pos):
@@ -282,8 +291,8 @@ def test(infile, actual_params):
         print(percent_b, percent_N0)
 
 if __name__ == '__main__':
-    #treefile = open("linear-latest.tre")
-    #t = TimeTree(treefile.readline())
-    #treefile.close()
-    actual_params = {"N0": 1095, "b": 1100}
-    test("linear-latest.tre", actual_params)
+    treefile = open("linear-latest.tre")
+    t = TimeTree(treefile.readline())
+    treefile.close()
+    best_params = optimize_linear(t)
+    print(best_params)

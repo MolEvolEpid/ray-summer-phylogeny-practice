@@ -2,32 +2,38 @@ from scipy.optimize import minimize
 from tree_likelihood import tree_likelihood
 from time_tree import TimeTree
 from population_models import *
+import random
 
 
 treefile = open("linear-latest.tre")
 t = TimeTree(treefile.readline())
 treefile.close()
 
-def fun(params):
+def fun(params): # TODO should be a lambda going forward but I can hardcode for now to get prints
     N0, b = params
     res = -tree_likelihood(t, lin_population, lin_probability, {"N0": N0, "b": b})
     print(params, res)
     return res
 
-def optimize_linear(tree):
-    res = minimize(fun, (100, 1), method="Nelder-Mead")
+def optimize_linear(tree, x0):
+    res = minimize(fun, x0, method="Nelder-Mead")
     return res
 
-if __name__ == "__main__":
-    best_params = optimize_linear(t)
-    print(best_params)
+def optimize_worse(tree, N0):
+    fm = lambda x: -tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": 1095})
+    res = minimize(fm, N0, method="BFGS")
+    return res
 
-# Okay, current issue is this:
-#     If I use BFGS, I get a failed optimization due to "precision loss"
-#     If I use Nelder-Mead with no special params, I get
-#     N0 = 1.874 and b = 1.875. How can that get past the filter?
-#     
-#     If I run tree_likelihood with those params, I get that the 
-#     log likelihood is 61.68. Does that mean something? Is it wrong?
-#     I don't get what it's doing wrong here. Shouldn't both of them 
-#     be significantly higher than it predicts?
+def different_cold_starts(tree, starts):
+    for x0 in starts:
+        res = optimize_linear(tree, x0)
+        print(x0, res.x, res.success)
+    
+def random_startpoint_list(n, low, high):
+    return [(random.randint(low, high), random.randint(low, high)) for _ in range(n)]
+
+if __name__ == "__main__":
+    #starts = [(1, 1), (300, 300), (1000, 1000), (100, 1), (1, 100), (1100, 1100)]
+    starts = random_startpoint_list(100, 1100, 2500)
+    different_cold_starts(t, starts)
+

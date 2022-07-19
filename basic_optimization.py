@@ -92,7 +92,7 @@ def optimize_linear(tree):
     for a linear tree.
     """
     fm = lambda x: -tree_likelihood(tree, lin_population, lin_probability, {"N0": x[0], "b": x[1]})
-    res = minimize(fm, (100, 1), method="BGFS")
+    res = minimize(fm, (100, 1), method="BFGS")
     return res.x
 
 def confidence_width(tree, peak_pos):
@@ -138,6 +138,44 @@ def confidence_bounds(tree, target_param, fixed_params={}):
 #
 # Input and output data files since these models can take a while to run
 #
+
+def alt_datafile_write(N0_range, k, peak_outfile=None):
+    "Terrible temporary version so I can make this plot."
+    peaks_out = {}
+    for N0 in N0_range:
+        print(f"\n\nNEW N0 SELECTED: {N0}")
+        run_params = {"N0": N0, "k": k}
+        peaks_out[N0] = []
+        for _ in range(1000):
+            print(f"  replicate {_}")
+            t = TimeTree(generate_tree(run_params))
+            peak_pos = max_likelihood(t, "N0")
+            peaks_out[N0].append(peak_pos)
+
+    # Write to the file they provide 
+    for outfile, dictionary, data_title in zip([peak_outfile], 
+                                               [peaks_out], 
+                                               ["peaks"]):
+        if outfile:
+            with open(outfile, "w") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=["N0", data_title])
+                writer.writeheader()
+                for N0, values in dictionary.items(): 
+                    writer.writerow({"N0": N0, data_title: values})
+
+def bad_datafile_read(peak_infile=None):
+    "Terrible temporary thing so I can make a plot"
+    peaks = {}
+    string_to_list = lambda s: s.strip('][').split(', ')
+    for infile, dictionary in zip([peak_infile], [peaks]):
+        if infile:
+            with open(infile) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    N0 = int(row["N0"])
+                    data_row = [float(peak) for peak in string_to_list(row["peaks"])]
+                    dictionary[N0] = data_row
+    return peaks
 
 def write_con_datafiles(k_range, replicates=100, peak_outfile=None, width_outfile=None):
     """

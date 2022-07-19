@@ -104,11 +104,10 @@ def lin_probability(params, z):
     k = params["k"]
     N0 = params["N0"]
     b = params["b"]
-    #if N0 - b*z <= 0: # would result in /0 errors, so we return 0 instead
-    #    return 0
-    if b == 0:
-        return 0
-    return (k*(k-1)/2) / (N0-b*z) * (N0 / (N0-b*z))**(-k*(k-1)/(2*b))
+    original = (k*(k-1)/2) / (N0-b*z) * (N0 / (N0-b*z))**(-k*(k-1)/(2*b))
+    new = (k*(k-1)/(2*(N0-b*z))) * (N0 / (N0 - b*z))**(-k*(k-1)/(2*b))
+    assert original == new, "Values didn't match"
+    return new
 
 def exp_probability(params, z):
     """

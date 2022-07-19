@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from population_models import *
 from tree_likelihood import *
+from basic_optimization import *
 
-def plot():
+def plot_populations():
     x = np.linspace(0, 10, 1000)
 
     con_params = {"N0": 2000, "k": 30}
@@ -35,5 +36,55 @@ def plot():
 
     plt.show()
 
+def plot_constant_hdi():
+    # Data should already be generated
+    # Uncomment line in __main__ below to generate it
+    tips_20 = bad_datafile_read(peak_infile="run/peaks_20.csv") # TODO generate these first
+    tips_100 = bad_datafile_read(peak_infile="run/peaks_100.csv") 
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    for ax, data in zip([ax1, ax2], [tips_20, tips_100]):
+        N0, peaks = calculate_axes(data)
+        hdi = calculate_error(data, error_hdi)
+
+        ax.scatter(N0, peaks, color="#1C5D99", zorder=3)
+        ax.errorbar(N0, peaks, yerr=hdi, fmt="none", color="#639FAB", zorder=2, capsize=5, label="HDI")
+        ax.set_xticks(N0)
+        ax.set_yticks(N0)
+        ax.set_title("Just for centering")
+        ax.set_xlabel("Centering")
+        ax.set_ylabel("Centering")
+
+    plt.show()
+
+def plot_linear_lk_curve():
+    treefile = open("linear-latest.tre")
+    tree = TimeTree(treefile.readline())
+    treefile.close()
+
+    fm = lambda x: -tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": 1100})
+    x = np.linspace(1, 2000, 1000)
+    y = [fm(N0) for N0 in x]
+
+    fig, ax = plt.subplots()
+
+    ax.plot(x, y, color="#1C5D99", linewidth=3)
+
+    ax.set_xlabel("Value of N0")
+    ax.set_ylabel("Negative log likelihood")
+    ax.set_title("just to center. b fixed at 1100.")
+
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    plt.show()
+
+    plt.show()
+
+
 if __name__ == "__main__":
-    plot()
+    plot_constant_hdi()
+    #plot_linear_lk_curve()
+
+

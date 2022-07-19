@@ -34,8 +34,9 @@ def tree_likelihood(tree, population, probability, params):
     params_now = params.copy()
 
     # Sanity check that these params won't make population invalid at the root of the tree
+    # (really just handles linear)
     total_time = tree.get_farthest_node()[1]
-    if population(params_now, total_time) < 0:
+    if population(params_now, total_time) <= 0:
         return -np.inf
 
     log_likelihood = 0

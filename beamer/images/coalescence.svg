@@ -36,7 +36,7 @@
      inkscape:cx="1157.2872"
      inkscape:cy="718.41137"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer4"
+     inkscape:current-layer="layer1"
      showgrid="false"
      units="mm"
      inkscape:pagecheckerboard="false"
@@ -67,7 +67,7 @@
      fit-margin-bottom="0" /><metadata
      id="metadata5"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><g
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><g
      inkscape:groupmode="layer"
      id="layer1"
      inkscape:label="Coalescent Plots"
@@ -634,6 +634,7 @@
      style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:16.93333244px;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332"
      id="tspan1724">Large N causes node times to be further apart, stretching the tree</tspan></text>
 
+
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:12.69999981px;line-height:1.25;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -645,6 +646,7 @@
      x="-49.212498"
      y="60.690189"
      style="stroke-width:0.26458332">N = 5</tspan></text>
+
 <text
    xml:space="preserve"
    style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:12.69999981px;line-height:1.25;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
@@ -661,4 +663,5 @@
      y="222.55321"
      style="stroke-width:0.26458332"
      id="tspan967" /></text>
+
 </g></svg>

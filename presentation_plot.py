@@ -49,6 +49,7 @@ def plot_constant_hdi():
     tips_100 = bad_datafile_read(peak_infile="run/peaks_100.csv") 
 
     fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.set_size_inches(16, 8)
 
     for ax, data in zip([ax1, ax2], [tips_20, tips_100]):
         N0, peaks = calculate_axes(data)
@@ -68,29 +69,34 @@ def plot_constant_hdi():
     ax1.set_title("Trees with 20 sequences", **title_font)
     ax2.set_title("Trees with 100 sequences", **title_font)
 
+    plt.savefig("hdi_fig.pdf")
     plt.show()
 
 def plot_linear_lk_curve():
+    title_font = {"family": "CMU Sans Serif",
+                  "size": 32}
+
+    main_font = {"family": "CMU Sans Serif",
+                 "size": 22}
+
+    plt.rcParams['font.size'] = 14
+
     treefile = open("linear-latest.tre")
     tree = TimeTree(treefile.readline())
     treefile.close()
 
-    fm = lambda x: -tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": 1100})
+    fm = lambda x: tree_likelihood(tree, lin_population, lin_probability, {"N0": x, "b": 1100})
     x = np.linspace(1, 2000, 1000)
     y = [fm(N0) for N0 in x]
 
     fig, ax = plt.subplots()
 
-    ax.plot(x, y, color="#1C5D99", linewidth=3)
+    ax.plot(x, y, color="#0072b2", linewidth=3)
 
-    ax.set_xlabel("Value of N0")
-    ax.set_ylabel("Negative log likelihood")
-    ax.set_title("just to center. b fixed at 1100.")
-
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    plt.show()
+    ax.set_xlabel("Value of N0", **main_font)
+    ax.set_ylabel("Log likelihood of tree", **main_font)
+    ax.set_title("Likelihood of N0 values with fixed B", **title_font)
+    ax.set_xticks([1100, 1250, 1500, 1750, 2000])
 
     plt.show()
 
@@ -107,6 +113,7 @@ def plot_various_b():
     
     plt.rcParams['font.size'] = 14
     fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.set_size_inches(16, 8)
 
     time = np.linspace(0, 100, 1000)
     for N0, b, col in zip(N0_list, b_list, color_list):
@@ -130,11 +137,12 @@ def plot_various_b():
     ax2.set_ylabel("Density", **main_font)
     ax2.legend(title="Value of B")
 
+    plt.savefig("various-b.pdf")
     plt.show()
 
 if __name__ == "__main__":
-    plot_constant_hdi()
+    #plot_constant_hdi()
     #plot_linear_lk_curve()
-    #plot_various_b()
+    plot_various_b()
 
 

@@ -37,8 +37,14 @@ def plot_populations():
     plt.show()
 
 def plot_constant_hdi():
-    # Data should already be generated
-    # Uncomment line in __main__ below to generate it
+    # Set up all these fonts
+    title_font = {"family": "CMU Sans Serif",
+                  "size": 32}
+
+    main_font = {"family": "CMU Sans Serif",
+                 "size": 22}
+    
+    plt.rcParams['font.size'] = 14
     tips_20 = bad_datafile_read(peak_infile="run/peaks_20.csv") # TODO generate these first
     tips_100 = bad_datafile_read(peak_infile="run/peaks_100.csv") 
 
@@ -48,13 +54,19 @@ def plot_constant_hdi():
         N0, peaks = calculate_axes(data)
         hdi = calculate_error(data, error_hdi)
 
-        ax.scatter(N0, peaks, color="#1C5D99", zorder=3)
-        ax.errorbar(N0, peaks, yerr=hdi, fmt="none", color="#639FAB", zorder=2, capsize=5, label="HDI")
+        ax.plot(N0, N0, color="#56b4e9")
+
+        ax.scatter(N0, peaks, color="#0072b2", zorder=3, label="Mean of Maximum Likelihood Estimates")
+        ax.errorbar(N0, peaks, yerr=hdi, fmt="none", color="#d55e00", zorder=2, capsize=5, label="95% Highest Density Interval")
         ax.set_xticks(N0)
         ax.set_yticks(N0)
-        ax.set_title("Just for centering")
-        ax.set_xlabel("Centering")
-        ax.set_ylabel("Centering")
+        ax.set_ylim(top=15000)
+        ax.set_xlabel("Real population size", **main_font)
+        ax.set_ylabel("Estimated population size", **main_font)
+        ax.legend()
+
+    ax1.set_title("Trees with 20 sequences", **title_font)
+    ax2.set_title("Trees with 100 sequences", **title_font)
 
     plt.show()
 
@@ -110,7 +122,8 @@ def plot_various_b():
     ax1.set_xlabel("Time", **main_font)
     ax1.set_ylabel("Population size", **main_font)
     ax1.legend(title="Value of B")
-    ax1.set_xticklabels([0, 0, 20, 40, 60, 80, 100])
+    # TODO is there a way to do this that's more correct? I get a warning about FixedFormatter.
+    ax1.set_xticklabels([0, 0, 20, 40, 60, 80, 100]) # Fake time to line up with expectations
 
     ax2.set_title("Expected time until first coalescence", **title_font)
     ax2.set_xlabel("Time back to first coalescence", **main_font)
@@ -120,8 +133,8 @@ def plot_various_b():
     plt.show()
 
 if __name__ == "__main__":
-    #plot_constant_hdi()
+    plot_constant_hdi()
     #plot_linear_lk_curve()
-    plot_various_b()
+    #plot_various_b()
 
 

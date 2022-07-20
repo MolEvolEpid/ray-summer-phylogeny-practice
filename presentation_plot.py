@@ -82,9 +82,46 @@ def plot_linear_lk_curve():
 
     plt.show()
 
+def plot_various_b():
+    title_font = {"family": "CMU Sans Serif",
+                  "size": 32}
+
+    main_font = {"family": "CMU Sans Serif",
+                 "size": 22}
+
+    N0_list = [505, 1005, 2005, 3005] # TODO do all these work well? Like do they make sense?
+    b_list = [5, 10, 20, 30]
+    color_list = ["#e69f00", "#56b4e9", "#0072b2", "#d55e00"]
+    
+    plt.rcParams['font.size'] = 14
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    time = np.linspace(0, 100, 1000)
+    for N0, b, col in zip(N0_list, b_list, color_list):
+        # "How does the population change over time?"
+        population = [lin_population({"N0": N0, "b": b}, t) for t in time]
+        # "Sampling from the end, what is the likelihood that our first coalescence event is at a certain time?"
+        probability = [lin_probability({"N0": N0, "b": b, "k": 20}, z) for z in time]
+        
+        ax1.plot(-time, population, color=col, label=str(b))
+        ax2.plot(time, probability, color=col, label=str(b))
+
+    ax1.set_title("Population size over time", **title_font)
+    ax1.set_xlabel("Time", **main_font)
+    ax1.set_ylabel("Population size", **main_font)
+    ax1.legend(title="Value of B")
+    ax1.set_xticklabels([0, 0, 20, 40, 60, 80, 100])
+
+    ax2.set_title("Expected time until first coalescence", **title_font)
+    ax2.set_xlabel("Time back to first coalescence", **main_font)
+    ax2.set_ylabel("Density", **main_font)
+    ax2.legend(title="Value of B")
+
+    plt.show()
 
 if __name__ == "__main__":
-    plot_constant_hdi()
+    #plot_constant_hdi()
     #plot_linear_lk_curve()
+    plot_various_b()
 
 

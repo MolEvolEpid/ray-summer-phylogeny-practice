@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import matplotlib.pyplot as plt
 import numpy as np
 import csv
 from time_tree import TimeTree
@@ -8,10 +7,7 @@ from tree_likelihood import tree_likelihood
 from tree_generation import generate_tree
 from scipy.optimize import minimize_scalar, brentq, minimize
 from arviz import hdi
-# TODO I eventually wanna support lin and exp too, but I can only generate con right now.
-from population_models import con_probability, con_population, \
-                              lin_probability, lin_population, \
-                              exp_probability, exp_population
+from population_models import * 
 
 #
 # Optimize one parameter of a tree

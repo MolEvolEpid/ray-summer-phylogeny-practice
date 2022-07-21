@@ -2,9 +2,7 @@
 
 import numpy as np
 from time_tree import TimeTree
-from tree_generation import generate_tree
-from population_models import con_probability, lin_probability, exp_probability, \
-        con_population, lin_population, exp_population
+from population_models import * # imports *_population, *_probability 
 
 #
 # Log likelihood of an entire tree

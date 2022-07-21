@@ -51,7 +51,7 @@ def output_to_file(tree_list, outfile):
     Write the Newick string representation of each tree in
     the list to a file. 
 
-    THE FILE WILL BE OVERWRITTEN.
+    ANY DATA IN THE FILE WILL BE OVERWRITTEN
 
     Parameters:
       tree_list (list): List containing one or more ete3 Tree objects
@@ -63,6 +63,7 @@ def output_to_file(tree_list, outfile):
     lines_out = [tree.write(format=1) + '\n' for tree in tree_list]
     with open(outfile, 'w') as treefile:
         treefile.writelines(lines_out)
+    print(f"Successfully written to {outfile}.")
 
 def main():
     """

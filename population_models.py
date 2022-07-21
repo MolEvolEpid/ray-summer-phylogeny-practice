@@ -4,7 +4,7 @@ from math import exp
 
 def check_params_exist(params, expected_params):
     """
-    Raise an exception if any of the expected_params are not in params.
+    Raise an exception if any of the expected_params are not a key in params.
 
     Parameters:
       params (dict): Dictionary containing any named parameters.
@@ -25,12 +25,14 @@ def con_population(params, t):
       params (dict): Description of population size. Kept in a dictionary
       to match linear and exponential inputs.
         N (float): Population size
+        I (float): Time of infection
       t (float): Time since infection
 
     Returns:
       population (float): Effective population size at specified time
     """
-    check_params_exist(params, ['N'])
+    # Even though we don't need I, there is no situation where it should not exist
+    check_params_exist(params, ['N', 'I'])
     return params["N"]
 
 def lin_population(params, t):

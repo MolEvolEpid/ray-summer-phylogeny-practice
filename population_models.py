@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-from math import exp
+from numpy import exp
 
 def check_params_exist(params, expected_params):
     """
@@ -31,9 +29,8 @@ def con_population(params, t):
     Returns:
       population (float): Effective population size at specified time
     """
-    # Even though we don't need I, there is no situation where it should not exist
     check_params_exist(params, ['N', 'I'])
-    return params["N"]
+    return params['N']
 
 def lin_population(params, t):
     """
@@ -51,13 +48,11 @@ def lin_population(params, t):
       population (float): Effective population size at specified time
     """
     check_params_exist(params, ['a', 'b', 'I'])
-    a = params["a"]
-    b = params["b"]
-    I = params["I"]
+    a = params['a']
+    b = params['b']
+    I = params['I']
     return a + (I-t)*b
 
-
-# TODO Come up with a better way to talk about the `start` value. Maybe rename it too.
 def con_probability(params, start, z):
     """
     The proabaility of a coalescence at time z with constant population
@@ -66,18 +61,19 @@ def con_probability(params, start, z):
       params (dict): Parameters specifying the state of the tree at a certain point in time.
         k (int): Number of sequences
         N (float): Population size
-      start (float): Position of the start of the current tree segment
+        I (float): Time of infection
+      start (float): Start of the window for the coalescence event (where the previous event ended)
       z (float): Time until the coalescence event (from start)
 
     Returns:
       probability (float): Probability of a coalescence event happening
       exactly at the specified time
     """
-    check_params_exist(params, ['k', 'N'])
-    k = params["k"]
-    N = params["N"]
+    check_params_exist(params, ['k', 'N', 'I'])
+    k = params['k']
+    N = params['N']
     lmd = k*(k - 1)/(2*N)
-    return lmd * np.exp(-lmd*z)
+    return lmd * exp(-lmd*z)
 
 def lin_probability(params, start, z):
     """
@@ -89,7 +85,7 @@ def lin_probability(params, start, z):
         a (float): Population at time of infection
         b (float): Linear rate of effective population increase (per generation)
         I (float): Time of infection
-      start (float): Position of the start of the current tree segment 
+      start (float): Start of the window for the coalescence event (where the previous event ended)
       z (float): Time until the coalescence event (from start)
 
     Returns:
@@ -97,9 +93,9 @@ def lin_probability(params, start, z):
       exactly at the specified time
     """
     check_params_exist(params, ['k', 'a', 'b', 'I'])
-    k = params["k"]
-    a = params["a"]
-    b = params["b"]
-    I = params["I"]
+    k = params['k']
+    a = params['a']
+    b = params['b']
+    I = params['I']
     return (k*(k-1) / 2) * (1 / (a+(b*(I-start-z)))) * ((a+(b*(I-start))) / (a+(b*(I-start-z)))) ** (-k*(k-1)/(2*b))
 

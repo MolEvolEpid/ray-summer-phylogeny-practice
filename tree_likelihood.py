@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-
 import numpy as np
+import warnings
 from time_tree import TimeTree
-from population_models import * # imports *_population, *_probability 
+from population_models import *
 
 #
 # Log likelihood of an entire tree
@@ -11,7 +10,7 @@ from population_models import * # imports *_population, *_probability
 def tree_segments(tree):
     """
     Divide a tree into segments based on the location of parent
-    nodes.
+    nodes (coalescence events)
     """
     node_times = [0]
     for node in tree.traverse():
@@ -34,46 +33,20 @@ def tree_likelihood(tree, population, probability, params):
     log_likelihood = 0
     params_now["k"] = len(tree.get_leaves())
 
-    for (start, end, dist) in tree_segments(tree): # TODO we may no longer need end
+    if params_now['b'] < 0:
+        return -np.inf
+    elif params_now['a'] < 0:
+        return -np.inf
+    # we will also eventually want a bound on I, but it doesn't make sense to have one now.
+
+    for (start, end, dist) in tree_segments(tree):
         if params_now["k"] == 1:
-            print("WARNING: k was 1")
+            warning.warn(f"WARNING: k was 1 between {start} and {start+dist}. The code can't handle this yet.")
         else:
-            print(params_now, start, dist)
             segment_lk = np.log(probability(params_now, start, dist))
-            print(f"  {segment_lk}")
+            if np.isnan(segment_lk):
+                warnings.warn("WARNING: segment likelihood came out as nan. You found a case that bypasses the existing bounds.")
             log_likelihood += segment_lk
         params_now["k"] -= 1
     return log_likelihood
 
-#
-# Test many points' likelihood. Also nice for plotting
-#
-
-def likelihood_surface(tree, population, probability, params):
-    """
-    The likelihood surface of a tree with a certain model, one ranged parameter,
-    and one fixed parameter.
-
-    Parameters:
-    pass
-      tree        : TimeTree
-      population  : con_- lin_- or exp_population
-      probability : con_- lin_- or exp_probability
-      params      : dictionary with two items
-                    one should be an iterable parameter and the other should be fixed
-    """
-    # Figure out what the parameters are
-    # Will totally break if there is more than one iterable and one non-iterable
-    for key in params:
-        try:
-            iter(params[key])
-            ranged_name = key
-            ranged = params[key]
-        except TypeError:
-            fixed_name = key
-            fixed = params[key]
-
-    # Generate a likelihood for each point
-    likelihoods = [tree_likelihood(tree, population, probability, \
-        {ranged_name: r, fixed_name: fixed}) for r in ranged]
-    return likelihoods

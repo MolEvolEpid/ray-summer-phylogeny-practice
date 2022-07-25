@@ -41,11 +41,13 @@ def tree_likelihood(tree, population, probability, params):
 
     for (start, end, dist) in tree_segments(tree):
         if params_now["k"] == 1:
-            warning.warn(f"WARNING: k was 1 between {start} and {start+dist}. The code can't handle this yet.")
+            warnings.warn(f"k was 1 between {start} and {start+dist}. The code can't handle this yet.")
+        if end > params_now["I"]:
+            warnings.warn(f"The end of the tree passes over the infection time, which the code can't handle yet.")
         else:
             segment_lk = np.log(probability(params_now, start, dist))
             if np.isnan(segment_lk):
-                warnings.warn("WARNING: segment likelihood came out as nan. You found a case that bypasses the existing bounds.")
+                warnings.warn("segment likelihood came out as nan. You found a case that bypasses the existing bounds.")
             log_likelihood += segment_lk
         params_now["k"] -= 1
     return log_likelihood

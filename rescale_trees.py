@@ -11,6 +11,9 @@ time_unit_days = 365
 # The number of days a generation takes (default 1.5)
 generation_days = 1.5
 
+# Whether or not to override the original files (default False)
+# If set to False, will create a copy and append "_rescaled" to the name.
+overwrite_original_files = True
 
 ###############################################################################
 
@@ -93,7 +96,10 @@ def main():
                 first_tree = Tree(lines[0]) # Attempt to convert the first line, catch the error it may throw
                 lines_out = parse_trees(lines)
                 name, ext = arg.split('.')
-                name_out = name + "_rescaled." + ext
+                if overwrite_original_files:
+                    name_out = name + "." + ext
+                else:
+                    name_out = name + "_rescaled." + ext
                 output_to_file(lines_out, name_out)
         return 0
     except Exception as e:

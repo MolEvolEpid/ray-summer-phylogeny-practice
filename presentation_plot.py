@@ -6,7 +6,20 @@ from population_models import *
 from tree_likelihood import *
 from basic_optimization import *
 
+title_font = {"family": "CMU Sans Serif",
+              "size": 32}
+
+main_font = {"family": "CMU Sans Serif",
+             "size": 22}
+
 def plot_populations():
+    """
+    Comparison between constant and linear populations.
+
+    MAY WANT TO DELETE THIS ONE.
+
+    BROKEN--WILL NOT WORK WITH NEW PARAMS.
+    """
     x = np.linspace(0, 10, 1000)
 
     con_params = {"N0": 2000, "k": 30}
@@ -37,13 +50,11 @@ def plot_populations():
     plt.show()
 
 def plot_constant_hdi():
-    # Set up all these fonts
-    title_font = {"family": "CMU Sans Serif",
-                  "size": 32}
+    """
+    Accuracy of our predictions of N0 on a constant model.
 
-    main_font = {"family": "CMU Sans Serif",
-                 "size": 22}
-    
+    BROKEN--WILL NOT WORK WITH NEW PARAMS.
+    """
     plt.rcParams['font.size'] = 14
     tips_20 = bad_datafile_read(peak_infile="run/peaks_20.csv") # TODO generate these first
     tips_100 = bad_datafile_read(peak_infile="run/peaks_100.csv") 
@@ -73,12 +84,12 @@ def plot_constant_hdi():
     plt.show()
 
 def plot_linear_lk_curve():
-    title_font = {"family": "CMU Sans Serif",
-                  "size": 32}
+    """
+    The accuracy of our predictions of N0 when we fix b to be 
+    a certain value.
 
-    main_font = {"family": "CMU Sans Serif",
-                 "size": 22}
-
+    BROKEN--WILL NOT WORK WITH NEW PARAMS.
+    """
     plt.rcParams['font.size'] = 14
 
     treefile = open("linear-latest.tre")
@@ -101,12 +112,12 @@ def plot_linear_lk_curve():
     plt.show()
 
 def plot_various_b():
-    title_font = {"family": "CMU Sans Serif",
-                  "size": 32}
+    """
+    The time until the first coalescence occurs with models with
+    various b.
 
-    main_font = {"family": "CMU Sans Serif",
-                 "size": 22}
-
+    BROKEN--WILL NOT WORK WITH NEW PARAMS.
+    """
     N0_list = [505, 1005, 2005, 3005] # TODO do all these work well? Like do they make sense?
     b_list = [5, 10, 20, 30]
     color_list = ["#e69f00", "#56b4e9", "#0072b2", "#d55e00"]
@@ -143,6 +154,5 @@ def plot_various_b():
 if __name__ == "__main__":
     #plot_constant_hdi()
     #plot_linear_lk_curve()
-    plot_various_b()
-
+    #plot_various_b()
 

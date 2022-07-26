@@ -10,11 +10,6 @@
 *.swp
 *.swo
 
-# Files containing tree data should be ignored by default
-*.tre
-*.nwk
-*.csv
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

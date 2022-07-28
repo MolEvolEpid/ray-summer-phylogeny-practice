@@ -41,16 +41,27 @@ def tree_segments_multihost(tree, T):
     """
     tree.populate_hosts({"D": 0, "R": 1}) # Overwrite any existing host data for what we'll use here
     
-    coalescence = {0: list(), 1: list()} # Start, end, and dist for each segment
-    no_coalescence = {0: list(), 1: list()}
-    coal_parents = {0: set(), 1: set()} # Parent nodes that we've already indexed.
-    no_coal_parents = {0: set(), 1: set()} # TODO is there a better way to avoid duplication?
+    coalescence = {0: [], 1: []} # Start, end, and dist for each segment
+    no_coalescence = {0: [], 1: []}
+    parents = {0: set(), 1: set()} # For coalescing nodes, which parents have we already seen?
 
+    def add_coalescence(node, host, start, end):
+        """
+        Add a coalescence event to the dictionary
+        if one has not already been added with the
+        same parent.
+        """
+        if node.up not in parents[host]:
+            coalescence[host].append((start, end, end-start))
+            parents[host].add(node.up)
+
+    # Find the state of every branch on the tree and assign it to the
+    # correct location.
     for node in tree.iter_descendants():
         start = node.time
         end = node.up.time
 
-        # Try to assign a host. 0 if before transmission, based on leaves if after
+        # Try to assign a host. 0 before transmission, based on leaves after
         if start <= T:
             try:
                 if node.children:
@@ -65,25 +76,11 @@ def tree_segments_multihost(tree, T):
             #print(f"auto assigned host as 0 for {node}")
             host = 0
 
-        # Find which category the branch falls into
         if end >= T > start:
-            # T in the middle of the branch: One half in donor, other half in either
             no_coalescence[host].append((start, T, T-start))
-            if node.up not in coal_parents[0]:
-                coalescence[0].append((T, end, end-T))
-                coal_parents[0].add(node.up)
-        elif end < T and start < T:
-            # Chronologically after T (towards tips): Might be in either 
-            if node.up not in coal_parents[host]:
-                coalescence[host].append((start, end, end-start))
-                coal_parents[host].add(node.up)
-        elif end >= T and start >= T:
-            # Chronologically before T (towards root): Must be in donor
-            if node.up not in coal_parents[0]:
-                coalescence[0].append((start, end, start-end))
-                coal_parents[0].add(node.up)
+            add_coalescence(node, 0, T, end) # always host 0 because that half is in donor
         else:
-            raise Exception(f"Couldn't determine the category of the branch. Had start {start} and end {end}.")
+            add_coalescence(node, host, start, end)
 
     # Sort segments by start time 
     coal_D = coalescence[0]
@@ -91,8 +88,6 @@ def tree_segments_multihost(tree, T):
     none_D = no_coalescence[0]
     none_R = no_coalescence[1]
     for l in [coal_D, coal_R, none_D, none_R]:
-        # First we need to get rid of...ones that connect to the same parent? Help how do I do this
-
         l.sort(key = lambda x: x[0])
 
     return coal_D, coal_R, none_D, none_R

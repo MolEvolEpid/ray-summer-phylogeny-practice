@@ -34,53 +34,61 @@ def tree_segments_multihost(tree, T):
         Also can be written As I_R (I sub R)
 
     Returns:
-      donor_segments (list): All segments which happen in the donor, 
-        including those between T and the root of the tree.
-      recip_segments (list): All segments which occur entirely in the
-        recipient, not counting those that cross over T.
-      tmiss_segments (list): All segments which cross over the transmission
-        time T, from the recipient to the donor.
+      coal_D (list): Segments with a coalescence in the donor
+      coal_R (list): Segments with a coalescence in the recipient
+      none_D (list): Segments without a coalescence in the donor
+      none_R (list): Segments without a coalescence in the recipient
     """
-    # TODO For this, I rely on having each leaf have a host attribute that is 0 or 1.
-    # I have a way to calculate these, but I was fighting with the class to get it
-    # to calculate that upon creation of the object.
-
-    t.populate_hosts({"D": 0, "R": 1}) # Overwrite any existing host data for what we'll use
+    tree.populate_hosts({"D": 0, "R": 1}) # Overwrite any existing host data for what we'll use here
+    
+    coalescence = {0: list(), 1: list()} # Start, end, and dist for each segment
+    no_coalescence = {0: list(), 1: list()}
+    coal_parents = {0: set(), 1: set()} # Parent nodes that we've already indexed.
+    no_coal_parents = {0: set(), 1: set()} # TODO is there a better way to avoid duplication?
 
     for node in tree.iter_descendants():
-        coal_D = [] # Intervals where coalescences occur normally
-        coal_R = []
-        none_D = [] # Intervals where no coalescence occurs
-        none_R = []
+        start = node.time
+        end = node.up.time
 
-        # The start and end of the branch from this node back
-        branch_start = node.up.time
-        branch_end = node.time
+        # Attempt to determine which host the node might belong to
+        if node.children:
+            host = node.get_children()[0].host
+        elif hasattr(node, 'host'):
+            host = node.host
+        else:
+            raise Exception("Node host could not be determined.")
 
-        # T is in the middle of the branch
-        # We need to spli everything up. But how? 
-        if branch_start >= T > branch_end:
-            if node_host == 0:
-                none = none_D
-            elif node_host == 1:
-                none = none_R
-            else:
-                raise Exception("Host was neither 0 or 1. This should not have happened.")
-            none.append((branch_start, T, T-branch_start))
-            coal_D.append((T, branch_end, branch_end-T)) # Other side is always in D
-        # Chronologically after T (towards tips)
-        # The children will all be of the same host, so we only need to check one
-        elif branch_start < T and branch_end < T:
-            if node_host == 0:
-                coal_D.append((branch_start, branch_end, branch_end-branch_start))
-            elif node_host == 1:
-                coal_R.append((branch_start, branch_end, branch_end-branch_start))
-            else:
-                raise Exception("Host was neither 0 or 1. This should not have happened.")
-        # Chronologically before T (towards root)
-        # These branches always have to be contained in the donor.
-        elif branch_start >= T and branch_end >= T:
-            coal_R.append((branch_start, branch_end, branch_end-branch_start))
+        # Find which category the branch falls into
+        if end >= T > start:
+            # T in the middle of the branch: One half in donor, other half in either
+            no_coalescence[host].append((start, T, T-start))
+            if node.up not in coal_parents[0]:
+                coalescence[0].append((T, end, end-T))
+                coal_parents[0].add(node.up)
+        elif end < T and start < T:
+            # Chronologically after T (towards tips): Might be in either 
+            if node.up not in coal_parents[host]:
+                coalescence[host].append((start, end, end-start))
+                coal_parents[host].add(node.up)
+        elif end >= T and start >= T:
+            # Chronologically before T (towards root): Must be in donor
+            if node.up not in coal_parents[0]:
+                coalescence[0].append((start, end, start-end))
+                coal_parents[0].add(node.up)
+        else:
+            raise Exception(f"Couldn't determine the category of the branch. Had start {start} and end {end}.")
+
+    # Sort segments by start time 
+    coal_D = coalescence[0]
+    coal_R = coalescence[1]
+    none_D = no_coalescence[0]
+    none_R = no_coalescence[1]
+    for l in [coal_D, coal_R, none_D, none_R]:
+        # First we need to get rid of...ones that connect to the same parent? Help how do I do this
+
+        l.sort(key = lambda x: x[0])
+
+    return coal_D, coal_R, none_D, none_R
 
 def tree_likelihood(tree, population, probability, params):
     """

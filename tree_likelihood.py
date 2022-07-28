@@ -50,13 +50,20 @@ def tree_segments_multihost(tree, T):
         start = node.time
         end = node.up.time
 
-        # Attempt to determine which host the node might belong to
-        if node.children:
-            host = node.get_children()[0].host
-        elif hasattr(node, 'host'):
-            host = node.host
+        # Try to assign a host. 0 if before transmission, based on leaves if after
+        if start <= T:
+            try:
+                if node.children:
+                    host = node.get_leaves()[0].host
+                else:
+                    host = node.host
+                #print(f"chose host as {host} for {node}")
+            except AttributeError:
+                print("Could not determine host of leaf. Do all leaves have a host attribute?")
+                raise
         else:
-            raise Exception("Node host could not be determined.")
+            #print(f"auto assigned host as 0 for {node}")
+            host = 0
 
         # Find which category the branch falls into
         if end >= T > start:

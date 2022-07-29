@@ -1,6 +1,6 @@
 from numpy import exp
 
-def check_params_exist(params, expected_params):
+def validate_params(params, expected_params):
     """
     Raise an exception if any of the expected_params are not a key in params.
 
@@ -13,6 +13,7 @@ def check_params_exist(params, expected_params):
     """
     if any(map(lambda s: s not in params, expected_params)):
         raise Exception(f"Please check params. Expected {expected_params}, given {list(params.keys())}")
+    return [params[k] for k in expected_params]
 
 def con_population(params, t):
     """
@@ -29,8 +30,8 @@ def con_population(params, t):
     Returns:
       population (float): Effective population size at specified time
     """
-    check_params_exist(params, ['N', 'I'])
-    return params['N']
+    N, I = validate_params(params, ['N', 'I'])
+    return N
 
 def lin_population(params, t):
     """
@@ -47,10 +48,7 @@ def lin_population(params, t):
     Returns:
       population (float): Effective population size at specified time
     """
-    check_params_exist(params, ['a', 'b', 'I'])
-    a = params['a']
-    b = params['b']
-    I = params['I']
+    a, b, I = validate_params(params, ['a', 'b', 'I'])
     return a + (I-t)*b
 
 def con_probability(params, start, z):
@@ -69,9 +67,8 @@ def con_probability(params, start, z):
       probability (float): Probability of a coalescence event happening
       exactly at the specified time
     """
-    check_params_exist(params, ['k', 'N', 'I'])
-    k = params['k']
-    N = params['N']
+    k, N, I = validate_params(params, ['k', 'N', 'I'])
+
     lmd = k*(k - 1)/(2*N)
     return lmd * exp(-lmd*z)
 
@@ -92,10 +89,11 @@ def lin_probability(params, start, z):
       probability (float): Probability of a coalescence event happening
       exactly at the specified time
     """
-    check_params_exist(params, ['k', 'a', 'b', 'I'])
-    k = params['k']
-    a = params['a']
-    b = params['b']
-    I = params['I']
-    return (k*(k-1) / 2) * (1 / (a+(b*(I-start-z)))) * ((a+(b*(I-start))) / (a+(b*(I-start-z)))) ** (-k*(k-1)/(2*b))
+    k, a, b, I = validate_params(params, ['k', 'a', 'b', 'I'])
+
+    lmd = k*(k-1)/2
+    start_pop = a + (b*(I-start-z))
+    end_pop = a + (b * (I-start))
+    return lmd * (1 / start_pop) * (end_pop / start_pop) ** (-lmd / b)
+
 

@@ -76,29 +76,53 @@ class TestTimeTree(unittest.TestCase):
 
 class TestTreeSegments(unittest.TestCase):
 
-    def test_num_segments_simple_aligned(self):
-        t = TimeTree("((A:1, B:1):2, C:3);")
+    def test_num_segments_1(self):
+        t = TimeTree("((A:1, A:1):2, A:3);")
         self.assertEqual(len(tree_segments(t)), 2)
 
-    def test_num_segments_complex_aligned(self):
-        t = TimeTree("((((A:1.5, B:1.5):1.5, C:3):1.5, (D:1, E:1):3.5):0.5, F:5);")
+    def test_num_segments_2(self):
+        t = TimeTree("((((A:1.5, A:1.5):1.5, A:3):1.5, (A:1, A:1):3.5):0.5, A:5);")
         self.assertEqual(len(tree_segments(t)), 5)
 
-    def test_num_segments_unaligned(self):
-        pass # TODO Code's not ready for this yet, but I should write them
+    def test_multihost_num_segments_1(self):
+        pass # TODO I need to write tests for the multihost stuff.
 
-    def test_segment_bounds_simple_aligned(self):
-        t = TimeTree("((A:1, B:1):2, C:3);")
+    def test_multihost_num_segments_2(self):
+        pass
+
+    def test_segment_bounds_1(self):
+        t = TimeTree("((A:1, A:1):2, A:3);")
         expected = [(0, 1.0, 1.0), (1.0, 3.0, 2.0)]
         self.assertEqual(tree_segments(t), expected)
 
-    def test_segment_bounds_complex_aligned(self):
-        t = TimeTree("((((A:1.5, B:1.5):1.5, C:3):1.5, (D:1, E:1):3.5):0.5, F:5);")
+    def test_segment_bounds_1(self):
+        t = TimeTree("((((A:1.5, A:1.5):1.5, A:3):1.5, (A:1, A:1):3.5):0.5, A:5);")
         expected = [(0, 1.0, 1.0), (1.0, 1.5, 0.5), (1.5, 3.0, 1.5), (3.0, 4.5, 1.5), (4.5, 5.0, 0.5)]
         self.assertEqual(tree_segments(t), expected)
 
-    def test_segment_bounds_unaligned(self):
-        pass
+    def test_multihost_segment_bounds_1(self):
+        t = TimeTree("((D_1:1, D_2:1):3, (R_3:2, R_4:2):2);")
+        exp_coal_D = [(0.0, 1.0, 1.0), (3.0, 4.0, 1.0)] 
+        exp_coal_R = [(0.0, 2.0, 2.0)]
+        exp_none_D = [(1.0, 3.0, 2.0)]
+        exp_none_R = [(2.0, 3.0, 1.0)]
+        coal_D, coal_R, none_D, none_R = tree_segments_multihost(t, 3.0)
+        self.assertEqual(exp_coal_D, coal_D)
+        self.assertEqual(exp_coal_R, coal_R)
+        self.assertEqual(exp_none_D, none_D)
+        self.assertEqual(exp_none_R, none_R)
+
+    def test_multihost_segment_bounds_2(self):
+        t = TimeTree("((((R_4:1.5, R_5:1.5):1.5, R_6:3):1.5, (D_1:1, D_2:1):3.5):0.5, D_3:5);")
+        exp_coal_D = [(0., 1., 1.), (2., 3., 1.), (3., 4.5, 1.5), (4.5, 5., 0.5)]
+        exp_coal_R = [(0., 1.5, 1.5)]
+        exp_none_D = [(0., 2., 2.), (1., 2., 1.)]
+        exp_none_R = [(0., 2., 2.), (1.5, 2., 0.5)]
+        coal_D, coal_R, none_D, none_R = tree_segments_multihost(t, 2.)
+        self.assertEqual(exp_coal_D, coal_D)
+        self.assertEqual(exp_coal_R, coal_R)
+        self.assertEqual(exp_none_D, none_D)
+        self.assertEqual(exp_none_R, none_R)
 
 class TestTreeLikelihood(unittest.TestCase):
 

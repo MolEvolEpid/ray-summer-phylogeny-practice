@@ -32,11 +32,10 @@ class TimeTree(Tree):
         for leaf in self.iter_leaves():
             name_prefix = leaf.name.split('_')[0]
             try:
-                host = hostnames[name_prefix]
+                leaf.host = hostnames[name_prefix]
             except KeyError:
                 warnings.warn(f"Could not find a host for name_prefix {name_prefix} in {hostnames}")
-                host = -1
-            leaf.add_feature("host", host)
+                leaf.host = -1
     
     def get_leaf_hosts(self):
         """
@@ -85,4 +84,36 @@ class TimeTree(Tree):
             return recent
         else:
             raise Exception("There are no mixed nodes on the tree.")
+
+    def split_at_time(self, T):
+        """
+        Return two parts of the tree: Those before T and those after.
+
+        Parameters:
+          T (float): Time to split around
+
+        Returns:
+          before (TimeTree): All branches before T
+          after (list): All branches after T. There can be multiple branches separated.
+        """
+        before = self.copy()
+
+        after = []
+        for node in before.iter_descendants():
+            start = node.time
+            end = node.up.time
+
+            if start < T <= end: # We're on the boundary.
+                # Detach the node from the base tree
+                parent = node.up # Detach the node from the base tree
+                after_T = node.detach()
+
+                # Add that node to the new list of nodes after T
+                after_T.dist = T-start
+                after.append(after_T)
+
+                # Clean up the parent so the distances still match
+                parent.add_child(dist=end-T)
+
+        return before, after
 

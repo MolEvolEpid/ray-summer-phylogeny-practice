@@ -113,6 +113,31 @@ class TestTreeSegments(unittest.TestCase):
         self.assertEqual(exp_none_D, none_D)
         self.assertEqual(exp_none_R, none_R)
 
+    def test_multihost_segment_bounds_3(self):
+        t = TimeTree("((D_2:1, D_3:1):2, (D_1:1.5, R_4:1.5):1.5);")
+        exp_coal_D = [(0., 1., 1.), (1.4, 1.5, 0.1), (1.5, 3., 1.5)] # TODO need to fix float error with .100000000000000009
+        exp_coal_R = []
+        exp_none_D = [(0., 1.4, 1.4), (1., 1.4, 0.4)] 
+        exp_none_R = [(0., 1.4, 1.4)]
+        coal_D, coal_R, none_D, none_R = tree_segments_multihost(t, 1.4)
+        self.assertEqual(exp_coal_D, coal_D)
+        self.assertEqual(exp_coal_R, coal_R)
+        self.assertEqual(exp_none_D, none_D)
+        self.assertEqual(exp_none_R, none_R)
+
+    def test_multihost_segment_bounds_4(self):
+        t = TimeTree("(((D_1:1, D_2:1):2.5, (R_3:2, R_4:2):1.5):2.5, R_5:6);")
+        exp_coal_D = [(0., 1., 1.), (3., 3.5, 0.5), (3.5, 6., 2.5)]
+        exp_coal_R = [(0., 2., 2.)]
+        exp_none_D = [(1., 3., 2.)]
+        exp_none_R = [(0., 3., 3.), (2., 3., 1.)]
+        coal_D, coal_R, none_D, none_R = tree_segments_multihost(t, 3.)
+        self.assertEqual(exp_coal_D, coal_D)
+        self.assertEqual(exp_coal_R, coal_R)
+        self.assertEqual(exp_none_D, none_D)
+        self.assertEqual(exp_none_R, none_R)
+
+
 class TestTreeLikelihood(unittest.TestCase):
 
     def test_con_likelihood_basic(self):

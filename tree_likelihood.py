@@ -3,16 +3,19 @@ import warnings
 from time_tree import TimeTree
 from population_models import *
 
-#
-# Log likelihood of an entire tree
-#
-
-def tree_segments(tree):
+def tree_segments(tree, start=0):
     """
     Divide a tree into segments based on the location of parent
     nodes (coalescence events)
+    
+    Parameters:
+      tree (TimeTree): Tree with a single host and tips at the same time
+      start (float, default 0): Initial time value
+
+    Returns:
+      segments (list): Tuples containing a start, end, and dist for each segment.
     """
-    node_times = [0]
+    node_times = [start]
     for node in tree.traverse():
         if node.children:
             node_times.append(node.time)
@@ -20,8 +23,47 @@ def tree_segments(tree):
 
     segments = []
     for start, end in zip(node_times, node_times[1:]):
-        segments.append((start, end, end-start))
+        segments.append((start, end, round(end-start, 5)))
     return segments
+
+def divide_tree_at_time(tree, T):
+    """
+    Divide a tree into two parts, those that fall before T and
+    those that fall after it.
+
+    Parameters:
+      tree (TimeTree): Entire tree 
+      T (float): Time to split around.
+
+    Returns:
+      before (TimeTree): All branches that happen before T
+      after (list): List of all branches that happen after T. There may be any number.
+    """
+    working = tree.copy() # Don't break the original tree up!
+    after = []
+
+    for node in working.iter_descendants():
+        start = node.time
+        end = node.up.time
+
+        if start < T <= end: # We're on the boundary.
+            # Detach the node from the base tree
+            parent = node.up # Detach the node from the base tree
+            after_T = node.detach()
+
+            # Add that node to the new list of nodes after T
+            after_T.dist = T-start
+            after.append(after_T)
+
+            # Clean up the parent so the distances still match
+            parent.add_child(dist=end-T)
+            #for c in parent.children: # TODO This changes the wrong nodes AHA!
+                #c.host = 0
+                #c.name = "D_trimmed"
+
+    before = working.copy()
+
+    return before, after
 
 def tree_segments_multihost(tree, T):
     """
@@ -40,50 +82,41 @@ def tree_segments_multihost(tree, T):
       none_R (list): Segments without a coalescence in the recipient
     """
     tree.populate_hosts({"D": 0, "R": 1}) # Overwrite any existing host data for what we'll use here
+    before, after = divide_tree_at_time(tree, T)
     
     coalescence = {0: [], 1: []} # Start, end, and dist for each segment
     no_coalescence = {0: [], 1: []}
     parents = {0: set(), 1: set()} # For coalescing nodes, which parents have we already seen?
 
     def add_coalescence(node, host, start, end):
-        """
-        Add a coalescence event to the dictionary
-        if one has not already been added with the
-        same parent.
-        """
+        """Add a coalescence event to the relevant list, but only if there
+        is not already one with the same host."""
         if node.up not in parents[host]:
-            coalescence[host].append((start, end, end-start))
+            coalescence[host].append((start, end, round(end-start, 5)))
             parents[host].add(node.up)
 
-    # Find the state of every branch on the tree and assign it to the
-    # correct location.
-    for node in tree.iter_descendants():
-        start = node.time
-        end = node.up.time
+    for fragment in after:
+        try:
+            if fragment.children:
+                host = fragment.get_leaves()[0].host
+            else:
+                host = fragment.host
+        except AttributeError:
+            print("Could not find a host for one of the tree fragments. Please check that all tree tips have hosts.")
+            raise
+        print(f"determined host {host} for {fragment}")
 
-        # Try to assign a host. 0 before transmission, based on leaves after
-        if start <= T:
-            try:
-                if node.children:
-                    host = node.get_leaves()[0].host
-                else:
-                    host = node.host
-                #print(f"chose host as {host} for {node}")
-            except AttributeError:
-                print("Could not determine host of leaf. Do all leaves have a host attribute?")
-                raise
-        else:
-            #print(f"auto assigned host as 0 for {node}")
-            host = 0
+        frag_start = fragment.time
+        frag_end = fragment.time + fragment.dist
+        no_coalescence[host].append((frag_start, frag_end, round(frag_end-frag_start, 5)))
 
-        if end >= T > start:
-            no_coalescence[host].append((start, T, T-start))
-            add_coalescence(node, 0, T, end) # always host 0 because that half is in donor
-        else:
+        for node in fragment.iter_descendants():
+            start = node.time
+            end = node.up.time
             add_coalescence(node, host, start, end)
 
     # Sort segments by start time 
-    coal_D = coalescence[0]
+    coal_D = coalescence[0] + tree_segments(before, start=T)
     coal_R = coalescence[1]
     none_D = no_coalescence[0]
     none_R = no_coalescence[1]

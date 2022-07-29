@@ -9,50 +9,39 @@ from time_tree import *
 #
 
 class TestPopulation(unittest.TestCase):
-    
+
     def test_con_pop_timezero(self):
-        self.assertEqual(con_population({"N0": 1000}, 0), 1000)
+        self.assertEqual(con_population({"N": 1000, "I": 30}, 30), 1000)
 
     def test_con_pop_timenonzero(self):
-        self.assertEqual(con_population({"N0": 1000}, 20), 1000)
+        self.assertEqual(con_population({"N": 1000, "I": 30}, 10), 1000)
 
     def test_lin_pop_timezero(self):
-        self.assertEqual(lin_population({"N0": 1000, "b": 20}, 0), 1000)
+        self.assertEqual(lin_population({"a": 5, "b": 3, "I": 30}, 30), 5)
 
     def test_lin_pop_timenonzero(self):
-        self.assertEqual(lin_population({"N0": 1000, "b": 20}, 5), 900)
+        self.assertEqual(lin_population({"a": 5, "b": 3, "I": 30}, 10), 65)
 
-    def test_exp_pop_timezero(self):
-        self.assertEqual(exp_population({"N0": 1000, "r": 0.2}, 0), 1000)
-
-    def test_exp_pop_timenonzero(self):
-        self.assertEqual(exp_population({"N0": 1000, "r": 0.2}, 5), 367.87944117144235)
 
 class TestProbability(unittest.TestCase):
 
-    def test_all_prob_timezero(self):
-        self.assertEqual(con_probability({"N0": 1000, "k": 20}, 0), 0.19)
+    def test_con_prob_timezero(self):
+        self.assertEqual(con_probability({"N": 1000, "k": 20, "I": 30}, 0, 0), 0.19)
 
     def test_con_prob_timesmall(self):
-        self.assertEqual(con_probability({"N0": 1000, "k": 20}, 0.123), 0.18561118307253321)
+        self.assertEqual(con_probability({"N": 1000, "k": 20, "I": 30}, 0, 3), 0.10744983335291204)
 
     def test_con_prob_timelarge(self):
-        self.assertEqual(con_probability({"N0": 1000, "k": 20}, 123.456), 1.2349923998740305e-11)
+        self.assertEqual(con_probability({"N": 1000, "k": 20, "I": 30}, 0, 20), 0.004250446652671464)
+
+    def test_lin_prob_timezero(self):
+        self.assertEqual(lin_probability({"a": 5, "k": 20, "b": 3, "I": 30}, 0, 0), 0.19) # TODO wait what? Shouldn't it be 0.19? It says 2.0...
 
     def test_lin_prob_timesmall(self):
-        self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 0.123), 0.1857240689796149)
+        self.assertEqual(lin_probability({"a": 5, "k": 20, "b": 3, "I": 30}, 0, 3), 0.004042611994059991)
 
     def test_lin_prob_timelarge(self):
-        self.assertEqual(lin_probability({"N0": 1000, "k": 20, "b": 5}, 123.456), 7.004166250572144e-17)
-
-    def test_exp_prob_timezero(self):
-        self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 0), 0.19)
-
-    def test_exp_prob_timesmall(self):
-        self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 0.123), 0.1878811825975959)
-
-    def test_exp_prob_timelarge(self):
-        self.assertEqual(exp_probability({"N0": 1000, "k": 20, "r": 0.1}, 12.345), 0.006371726862993659)
+        self.assertEqual(lin_probability({"a": 5, "k": 20, "b": 3, "I": 30}, 0, 20), 1.861372802109581e-27)
 
 #
 # time_tree.py

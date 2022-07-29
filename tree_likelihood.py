@@ -26,45 +26,6 @@ def tree_segments(tree, start=0):
         segments.append((start, end, round(end-start, 5)))
     return segments
 
-def divide_tree_at_time(tree, T):
-    """
-    Divide a tree into two parts, those that fall before T and
-    those that fall after it.
-
-    Parameters:
-      tree (TimeTree): Entire tree 
-      T (float): Time to split around.
-
-    Returns:
-      before (TimeTree): All branches that happen before T
-      after (list): List of all branches that happen after T. There may be any number.
-    """
-    working = tree.copy() # Don't break the original tree up!
-    after = []
-
-    for node in working.iter_descendants():
-        start = node.time
-        end = node.up.time
-
-        if start < T <= end: # We're on the boundary.
-            # Detach the node from the base tree
-            parent = node.up # Detach the node from the base tree
-            after_T = node.detach()
-
-            # Add that node to the new list of nodes after T
-            after_T.dist = T-start
-            after.append(after_T)
-
-            # Clean up the parent so the distances still match
-            parent.add_child(dist=end-T)
-            #for c in parent.children: # TODO This changes the wrong nodes AHA!
-                #c.host = 0
-                #c.name = "D_trimmed"
-
-    before = working.copy()
-
-    return before, after
-
 def tree_segments_multihost(tree, T):
     """
     Divide a tree into three types of segments: Those that occur entirely in either 
@@ -82,7 +43,7 @@ def tree_segments_multihost(tree, T):
       none_R (list): Segments without a coalescence in the recipient
     """
     tree.populate_hosts({"D": 0, "R": 1}) # Overwrite any existing host data for what we'll use here
-    before, after = divide_tree_at_time(tree, T)
+    before, after = tree.split_at_time(T)
     
     coalescence = {0: [], 1: []} # Start, end, and dist for each segment
     no_coalescence = {0: [], 1: []}
@@ -104,7 +65,6 @@ def tree_segments_multihost(tree, T):
         except AttributeError:
             print("Could not find a host for one of the tree fragments. Please check that all tree tips have hosts.")
             raise
-        print(f"determined host {host} for {fragment}")
 
         frag_start = fragment.time
         frag_end = fragment.time + fragment.dist

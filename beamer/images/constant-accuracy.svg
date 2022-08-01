@@ -2,17 +2,31 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.1"
    id="svg2"
    width="1536"
    height="768"
    viewBox="0 0 1536 768"
    sodipodi:docname="constant-accuracy.svg"
-   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <metadata
+     id="metadata2509">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
   <defs
      id="defs6">
     <clipPath
@@ -391,12 +405,12 @@
      inkscape:deskcolor="#505050"
      showgrid="false"
      inkscape:zoom="0.86915208"
-     inkscape:cx="751.88222"
+     inkscape:cx="774.15408"
      inkscape:cy="382.55675"
-     inkscape:window-width="1916"
-     inkscape:window-height="1139"
+     inkscape:window-width="1920"
+     inkscape:window-height="1136"
      inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-y="27"
      inkscape:window-maximized="1"
      inkscape:current-layer="g10">
     <inkscape:page
@@ -540,7 +554,7 @@
     </g>
     <g
        id="g72"
-       transform="translate(254.89347,22.9225)">
+       transform="translate(483.28896,19.9225)">
       <text
          xml:space="preserve"
          transform="scale(1,-1)"
@@ -672,7 +686,7 @@
     </g>
     <g
        id="g134"
-       transform="rotate(90,-41.450625,125.6225)">
+       transform="rotate(90,-42.950625,124.1225)">
       <text
          xml:space="preserve"
          transform="scale(1,-1)"
@@ -1268,19 +1282,6 @@
              sodipodi:role="line"
              id="tspan542">10000</tspan></text>
       </g>
-      <g
-         id="g546"
-         transform="translate(741.87528,22.9225)">
-        <text
-           xml:space="preserve"
-           transform="scale(1,-1)"
-           style="font-variant:normal;font-weight:normal;font-size:22px;font-family:'CMU Sans Serif';-inkscape-font-specification:CMUSansSerif;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
-           id="text550"><tspan
-             x="0 14.212 23.98 34.540001 39.798 47.124001 58.498001 69.498001 80.872002 92.246002 97.503998 108.064 116.006 121.264 132.26401 143.638 150.964 159.39 164.64799 174.218"
-             y="0"
-             sodipodi:role="line"
-             id="tspan548">Real population size</tspan></text>
-      </g>
       <path
          d="m 630.98182,86.596309 h -3.5"
          style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.8;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
@@ -1399,19 +1400,6 @@
              y="0"
              sodipodi:role="line"
              id="tspan604">10000</tspan></text>
-      </g>
-      <g
-         id="g608"
-         transform="rotate(90,202.04028,369.11341)">
-        <text
-           xml:space="preserve"
-           transform="scale(1,-1)"
-           style="font-variant:normal;font-weight:normal;font-size:22px;font-family:'CMU Sans Serif';-inkscape-font-specification:CMUSansSerif;writing-mode:lr-tb;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
-           id="text612"><tspan
-             x="0 13.134 21.559999 29.502001 34.759998 52.228001 62.787998 70.730003 80.498001 91.872002 99.197998 110.572 121.572 132.946 144.32001 149.578 160.138 168.08 173.338 184.338 195.71201 203.03799 211.464 216.722 226.29201"
-             y="0"
-             sodipodi:role="line"
-             id="tspan610">Estimated population size</tspan></text>
       </g>
     </g>
     <g

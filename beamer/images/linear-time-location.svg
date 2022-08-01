@@ -150,9 +150,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.804489"
-     inkscape:cx="901.91406"
-     inkscape:cy="544.61538"
+     inkscape:zoom="0.56885963"
+     inkscape:cx="1069.6313"
+     inkscape:cy="646.38819"
      inkscape:document-units="mm"
      inkscape:current-layer="layer2"
      showgrid="false"
@@ -202,6 +202,7 @@
 
 
 
+
 <g
    id="g13047"
    transform="rotate(-90,107.67255,131.06969)"
@@ -223,6 +224,7 @@
 
 
 
+
 </g><text
    xml:space="preserve"
    id="text13128"
@@ -231,9 +233,10 @@
 
 
 
+
 <path
    style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
-   d="M 29.225512,271.19129 474.49951,12.661173"
+   d="M 29.225512,271.19129 465.08151,18.12935"
    id="path13162"
    sodipodi:nodetypes="cc"
    inkscape:connector-curvature="0" /><g
@@ -241,7 +244,7 @@
    transform="translate(112.81473,-5.2916669)"
    style="stroke:#0072b2;stroke-width:1;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1"><path
      style="opacity:1;fill:#000000;fill-opacity:1;stroke:#0072b2;stroke-width:1;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1"
-     d="M 29.225512,276.48299 361.93584,85.253809"
+     d="M 29.225512,276.48299 352.3443,90.766662"
      id="path13162-9"
      sodipodi:nodetypes="cc"
      inkscape:connector-curvature="0" /></g><g
@@ -252,7 +255,7 @@
      transform="translate(112.81473)"
      style="opacity:1;fill:none;fill-opacity:1;stroke:#d55e00;stroke-width:1;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1"><path
        style="opacity:1;fill:none;fill-opacity:1;stroke:#d55e00;stroke-width:1;stroke-dasharray:4, 4;stroke-dashoffset:0;stroke-opacity:1"
-       d="M 29.225512,275.95382 251.463,149.28295"
+       d="M 29.225512,275.95382 241.87738,154.74656"
        id="path13162-9-8"
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0" /></g></g><path
@@ -266,16 +269,17 @@
    id="path15824"
    inkscape:connector-curvature="0" /><text
    xml:space="preserve"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7px;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-   x="93.12999"
-   y="241.33098"
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.69999981px;font-family:'CMU Sans Serif';-inkscape-font-specification:'CMU Sans Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+   x="84.700127"
+   y="241.94725"
    id="text21649"
    transform="rotate(-30.113912)"><tspan
      sodipodi:role="line"
      id="tspan21647"
      style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1;stroke-dasharray:none;stroke-opacity:1"
-     x="93.12999"
-     y="241.33098">Donor population size</tspan></text>
+     x="84.700127"
+     y="241.94725">Viral population in donor</tspan></text>
+
 
 
 
@@ -298,32 +302,34 @@
 
 
 
+
 <circle
    style="fill:#000000;stroke:none;stroke-width:0.42701"
    id="path1097"
-   cx="474.75058"
-   cy="12.228772"
+   cx="465.08151"
+   cy="18.129351"
    r="2.6276419" /><g
    id="g1724"
-   transform="translate(-1.3749964e-5,67.73337)"
+   transform="translate(-9.5915498,73.246223)"
    style="fill:#0072b2;fill-opacity:1"><circle
-     style="display:inline;opacity:1;fill:#0072b2;stroke:none;stroke-width:0.42701;fill-opacity:1"
+     style="display:inline;opacity:1;fill:#0072b2;fill-opacity:1;stroke:none;stroke-width:0.42701"
      id="path1097-3"
      cx="474.75058"
      cy="12.228772"
      r="2.6276419" /></g><g
    id="g1745"
-   transform="translate(1.3749964e-5,64.029136)"
+   transform="translate(-9.5856061,69.492751)"
    style="fill:#d55e00;fill-opacity:1"><g
      id="g1724-6"
      transform="translate(-1.3749964e-5,67.73337)"
      style="display:inline;opacity:1;fill:#d55e00;fill-opacity:1"><circle
-       style="display:inline;opacity:1;fill:#d55e00;stroke:none;stroke-width:0.42701;fill-opacity:1"
+       style="display:inline;opacity:1;fill:#d55e00;fill-opacity:1;stroke:none;stroke-width:0.42701"
        id="path1097-3-7"
        cx="474.75058"
        cy="12.228772"
        r="2.6276419" /></g></g><path
-   style="fill:none;stroke:#000000;stroke-width:1.265;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;marker-start:url(#marker8926);marker-end:url(#Arrow1Send)"
-   d="m 272.31572,269.4138 31.57284,-5.26213 -134.84233,5.59103"
+   style="fill:none;stroke:#000000;stroke-width:1.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8926);marker-end:url(#Arrow1Send)"
+   d="m 272.31572,269.4138 35.29373,-11.30858 -146.47012,12.5677"
    id="path8492"
-   inkscape:connector-curvature="0" /></g></svg>
+   inkscape:connector-curvature="0"
+   sodipodi:nodetypes="ccc" /></g></svg>

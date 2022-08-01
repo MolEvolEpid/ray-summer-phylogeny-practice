@@ -1,4 +1,5 @@
 from numpy import exp
+from scipy.stats import expon
 
 def validate_params(params, expected_params):
     """
@@ -96,4 +97,52 @@ def lin_probability(params, start, z):
     end_pop = a + (b * (I-start))
     return lmd * (1 / start_pop) * (end_pop / start_pop) ** (-lmd / b)
 
+def con_nocoal_probability(params, start, z):
+    """
+    The probability of no coalescence happening from start for z time
+    with constant population.
 
+    Parameters:
+      params (dict): Parameters specifying the state of the tree at a certain point in time.
+        k (int): Number of sequences
+        N (float): Population size
+        I (float): Time of infection
+      start (float): Start of the window for the coalescence event (where the previous event ended)
+      z (float): Time until the coalescence event (from start)
+
+    Returns:
+      probability (float): Probability of no coalescence happening across the
+      specified time.
+    """
+    k, N, I = validate_params(params, ['k', 'N', 'I'])
+
+    scale = (2*N) / (k*(k-1))
+    dist = expon(scale=scale)
+
+    return 1 - dist.cdf(z)
+
+def lin_nocoal_probability(params, start, z):
+    """
+    The probability of no coalescence happening from start for z time
+    with linear population.
+
+    Parameters:
+      params (dict): Parameters specifying the state of the tree at a certain point in time.
+        k (int): Number of sequences
+        a (float): Population at time of infection
+        b (float): Linear rate of effective population increase (per generation)
+        I (float): Time of infection
+      start (float): Start of the window for the coalescence event (where the previous event ended)
+      z (float): Time until the coalescence event (from start)
+
+    Returns:
+      probability (float): Probability of no coalescence happening across the
+      specified time.
+    """
+    k, a, b, I = validate_params(params, ['k', 'a', 'b', 'I'])
+
+    lmb = k*(k-1) / (2*b)
+    start_pop = a + (b*(I-start-z))
+    end_pop = a + (b * (I-start))
+
+    return (end_pop ** -lmb) * (start_pop ** lmb)

@@ -36,7 +36,7 @@ class TimeTree(Tree):
             except KeyError:
                 warnings.warn(f"Could not find a host for name_prefix {name_prefix} in {hostnames}")
                 leaf.host = -1
-    
+
     def get_leaf_hosts(self):
         """
         For each leaf in the tree, get the host value.
@@ -116,4 +116,40 @@ class TimeTree(Tree):
                 parent.add_child(dist=end-T)
 
         return before, after
+
+    def get_k(self, host, time):
+        """
+        Determine the value of k for a certain host at a specific point in time.
+
+        If the first coalescence event has not yet happened (e.g. at the tips), k
+        is equal to the number of tips with the appropriate host.
+        At any other point, k is equal to the number of branches that pass through
+        that time.
+
+        Parameters:
+          tree (TimeTree): Representation of tree
+          host (int): Integer representation of host, usually 0 or 1.
+          time (float): Time to count k.
+
+        Returns:
+          k (int): k at that time
+        """
+        # Earliest coalescence in the tree. Host shouldn't matter, as we just want
+        # a small time value that's appropriate to the tree.
+        # TODO this will *REALLY* break if we have tips at different times. Be careful about that.
+        node_times = [node.time for node in self.traverse() if node.children]
+        cutoff_time = min(node_times)
+
+        if time < cutoff_time:
+            # k is the number of leaves if we're before the first coalescence event
+            k = len([leaf for leaf in self.get_leaves() if leaf.host == host])
+        else:
+            # k is the number of branches that cross the time at any other point
+            k = 0
+            for node in self.iter_descendants():
+                start = node.time
+                end = node.up.time
+                if end <= time <= start:
+                    k += 1
+        return k
 

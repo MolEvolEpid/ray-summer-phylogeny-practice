@@ -6,48 +6,23 @@ from population_models import *
 from tree_likelihood import *
 from basic_optimization import *
 
+# Fonts
 title_font = {"family": "CMU Sans Serif",
               "size": 32}
-
 main_font = {"family": "CMU Sans Serif",
              "size": 22}
+small_font = {"family": "CMU Sans Serif",
+              "size": 16}
 
-def plot_populations():
-    """
-    Comparison between constant and linear populations.
-
-    MAY WANT TO DELETE THIS ONE.
-
-    BROKEN--WILL NOT WORK WITH NEW PARAMS.
-    """
-    x = np.linspace(0, 10, 1000)
-
-    con_params = {"N0": 2000, "k": 30}
-    lin_params = {"N0": 4000, "k": 30, "b": 400}
-
-    con_pop = [con_population(con_params, t) for t in x]
-    lin_pop = [lin_population(lin_params, t) for t in x]
-
-    con_prob = [con_probability(con_params, z) for z in x]
-    lin_prob = [lin_probability(lin_params, z) for z in x]
-
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-
-    ax1.plot(-x, con_pop, color="#1C5D99", linewidth=3)
-    ax1.plot(-x, lin_pop, color="#639FAB", linewidth=3)
-    ax1.set_xticks([])
-    ax1.set_yticks([])
-    ax1.set_xlabel("Time (t)")
-    ax1.set_ylabel("Population size (N)")
-
-    ax2.plot(x, con_prob, color="#1C5D99", linewidth=3)
-    ax2.plot(x, lin_prob, color="#639FAB", linewidth=3)
-    ax2.set_xticks([])
-    ax2.set_yticks([])
-    ax2.set_xlabel("Time until coalescence (z)")
-    ax2.set_ylabel("Coalescence PDF (l)")
-
-    plt.show()
+# Colors
+orange = "#E69F00"
+lblue  = "#56B4E9"
+green  = "#009E73"
+yellow = "#F0E442"
+dblue  = "#0072B2"
+red    = "#D55E00"
+pink   = "#CC79A7"
+black  = "#000000"
 
 def plot_constant_hdi():
     """
@@ -68,8 +43,8 @@ def plot_constant_hdi():
 
         ax.plot(N0, N0, color="#56b4e9")
 
-        ax.scatter(N0, peaks, color="#0072b2", zorder=3, label="Mean of Maximum Likelihood Estimates")
-        ax.errorbar(N0, peaks, yerr=hdi, fmt="none", color="#d55e00", zorder=2, capsize=5, label="95% Highest Density Interval")
+        ax.scatter(N0, peaks, color=dblue, zorder=3, label="Mean of Maximum Likelihood Estimates")
+        ax.errorbar(N0, peaks, yerr=hdi, fmt="none", color=red, zorder=2, capsize=5, label="95% Highest Density Interval")
         ax.set_xticks(N0)
         ax.set_yticks(N0)
         ax.set_ylim(top=15000)
@@ -102,7 +77,7 @@ def plot_linear_lk_curve():
 
     fig, ax = plt.subplots()
 
-    ax.plot(x, y, color="#0072b2", linewidth=3)
+    ax.plot(x, y, color=dblue, linewidth=3)
 
     ax.set_xlabel("Value of N0", **main_font)
     ax.set_ylabel("Log likelihood of tree", **main_font)
@@ -120,7 +95,7 @@ def plot_various_b():
     """
     N0_list = [505, 1005, 2005, 3005] # TODO do all these work well? Like do they make sense?
     b_list = [5, 10, 20, 30]
-    color_list = ["#e69f00", "#56b4e9", "#0072b2", "#d55e00"]
+    color_list = [orange, lblue, dblue, red]
     
     plt.rcParams['font.size'] = 14
     fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -151,8 +126,46 @@ def plot_various_b():
     plt.savefig("various-b.pdf")
     plt.show()
 
+def plot_single_tree_likelihood():
+    """
+    Plot the likelihood curves for several different segments
+    on a tree and show how they line with what happened on the tree.
+    """
+    tree_ex = TimeTree("(D_3:462.54,(D_1:348.141,(D_2:43.4684,D_4:43.4684):304.673):114.399);")
+    # The segments we care about:
+    #   start=0       z=43.4684 with k=4, a=5, b=3.
+    #   start=43.4684 z=304.673 with k=3, a=5, b=3
+    #   start=448.141 z=114.399 with k=2, a=5, b=3
+
+    segment_lk = lambda k, start, z: lin_probability({"k": k, "a": 5, "b": 4, "I": 2*(365/1.5)}, start, z)
+
+    fig, ax = plt.subplots()
+
+    for color, label, start, k in zip([green, orange, yellow], ['First segment', 'Second segment', 'Third segment'], [0., 43.4684, 348.141], [4, 3, 2]):
+        t_range = np.linspace(2*(365/1.5), 0, 1000)
+        #z_range = np.linspace(0, 2*(365/1.5)-start, 1000)
+        z_range = np.linspace(0, 2*(365/1.5), 1000)
+
+        lk = [segment_lk(k, start, z) for z in z_range]
+
+        #ax.plot(t_range, lk, label=label)
+        ax.fill_between(-t_range, lk, 0, label=label, color=color, alpha=0.5)
+
+    ax.legend()
+    ax.set_xticks([-500, -400, -300, -200, -100, 0])
+    ax.set_xticklabels(['500', '400', '300', '200', '100', '0'], **small_font)
+    ax.set_yticks([0, 0.05, 0.10, 0.15])
+    ax.set_yticklabels(['0', '0.05', '0.10', '0.15'], **small_font)
+    ax.set_xlabel("Time (generations)", **main_font)
+    ax.set_ylabel("Coalescence likelihood", **main_font)
+    plt.show()
+
+        
+
+
 if __name__ == "__main__":
     #plot_constant_hdi()
     #plot_linear_lk_curve()
     #plot_various_b()
+    plot_single_tree_likelihood()
 

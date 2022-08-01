@@ -3,8 +3,18 @@ import warnings
 
 class TimeTree(Tree):
     def __init__(self, *args, **kwargs):
+        # We need to take hosts out of kwargs before doing super.
+        if "hosts" in kwargs:
+            hosts = kwargs["hosts"]
+            kwargs.pop("hosts")
+        else:
+            hosts = {}
+
         super(TimeTree, self).__init__(*args, **kwargs)
+
         self.populate_times()
+        if hosts:
+            self.populate_hosts(hosts)
 
     def populate_times(self):
         """
